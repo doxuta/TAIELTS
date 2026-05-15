@@ -12,11 +12,10 @@ export default async function StudentPortalLayout({ children }: { children: Reac
   // Student sidebar nav
   const studentNav = [
     { href: '/student/dashboard', label: 'Trang chủ' },
-    { href: '/student/roadmap', label: 'Lộ trình' },
-    { href: '/student/lessons', label: 'Giáo án' },
-    { href: '/student/assignments', label: 'Bài tập' },
-    { href: '/student/vocabulary', label: 'Từ vựng' },
-    { href: '/student/reports', label: 'Báo cáo' },
+    { href: '/student/lessons', label: 'Buổi học & Bài tập' },
+    { href: '/student/assignments', label: 'Kiểm tra & Nộp bài' },
+    { href: '/student/vocab', label: 'Flashcard từ vựng' },
+    { href: '/student/journal', label: 'Nhật ký tiến bộ' },
   ]
 
   return (
