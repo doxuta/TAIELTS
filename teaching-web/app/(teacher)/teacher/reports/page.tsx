@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Loader2, FileText, Send, RefreshCw } from 'lucide-react'
+import { useToast } from '@/components/ui/Toast'
 
 interface Student { id: string; fullName: string; currentMonth: number }
 interface Report { id: string; month: number; year: number; title: string; content: string; sentAt?: string | null }
@@ -13,6 +14,7 @@ export default function ReportsPage() {
   const [report, setReport] = useState<Report | null>(null)
   const [generating, setGenerating] = useState(false)
   const [reports, setReports] = useState<Report[]>([])
+  const { toast, ToastContainer } = useToast()
 
   useEffect(() => {
     fetch('/api/students').then(r => r.json()).then((data: Student[]) => {
@@ -45,6 +47,7 @@ export default function ReportsPage() {
       return [...filtered, data]
     })
     setGenerating(false)
+    toast('Báo cáo tháng đã được tạo!', 'success')
   }
 
   const student = students.find(s => s.id === selectedId)
@@ -102,6 +105,7 @@ export default function ReportsPage() {
           <p className="text-xs text-ink-tertiary">Nhấn "Tạo báo cáo" để tự động tổng hợp từ rubric và weekly progress.</p>
         </div>
       )}
+      {ToastContainer}
     </div>
   )
 }

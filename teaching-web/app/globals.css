@@ -243,6 +243,16 @@
   pointer-events: none;
 }
 
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ===== FADE-RISE ANIMATIONS ===== */
 @keyframes fade-rise {
   from { opacity: 0; transform: translateY(24px); }

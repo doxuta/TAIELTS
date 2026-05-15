@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Loader2, FileText, Clock } from 'lucide-react'
+import { useToast } from '@/components/ui/Toast'
 
 const TYPES = [
   { value: 'WEEKLY_EXERCISE', label: 'Bài tập tuần' },
@@ -18,6 +19,7 @@ export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
+  const { toast, ToastContainer } = useToast()
 
   const [form, setForm] = useState({
     title: '', type: 'WEEKLY_EXERCISE', month: 1, week: 1,
@@ -40,6 +42,7 @@ export default function AssignmentsPage() {
     })
     setLoading(false); setShowForm(false)
     load()
+    toast('Bài tập đã được tạo!', 'success')
   }
 
   const TYPE_BADGE: Record<string, string> = {
@@ -164,6 +167,7 @@ export default function AssignmentsPage() {
           })}
         </div>
       )}
+      {ToastContainer}
     </div>
   )
 }

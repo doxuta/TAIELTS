@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Loader2, Save, BarChart3 } from 'lucide-react'
+import { useToast } from '@/components/ui/Toast'
 
 const SKILLS = [
   { key: 'grammarScore', label: 'Ngữ pháp', desc: 'Nắm cấu trúc, ít lỗi sai' },
@@ -19,7 +20,7 @@ export default function RubricsPage() {
   const [selectedId, setSelectedId] = useState('')
   const [month, setMonth] = useState(new Date().getMonth() + 1)
   const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const { toast, ToastContainer } = useToast()
 
   const [scores, setScores] = useState<Record<string, number | null>>({
     grammarScore: null, vocabularyScore: null, listeningScore: null,
@@ -56,14 +57,15 @@ export default function RubricsPage() {
   }, [selectedId, month])
 
   const handleSave = async () => {
-    setLoading(true); setSaved(false)
-    await fetch('/api/rubrics', {
+    setLoading(true)
+    const res = await fetch('/api/rubrics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ studentId: selectedId, month, ...scores, ...text }),
     })
-    setLoading(false); setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setLoading(false)
+    if (res.ok) toast('Đã lưu đánh giá tháng!', 'success')
+    else toast('Lưu thất bại, thử lại.', 'error')
   }
 
   const student = students.find(s => s.id === selectedId)
@@ -141,9 +143,11 @@ export default function RubricsPage() {
 
       <div className="flex justify-end mt-5 animate-fade-up stagger-4">
         <button onClick={handleSave} disabled={loading || !selectedId} className="btn-primary">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? '✓ Đã lưu' : <><Save className="w-4 h-4" /> Lưu đánh giá</>}
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4" /> Lưu đánh giá</>}
         </button>
       </div>
+
+      {ToastContainer}
     </div>
   )
 }
