@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Xuan Tai IELTS — Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="image-slot.js"></script>
+
+<style>
+  :root{
+    --bg:#000;
+    --ink:#E1E0CC;
+    --ink-soft:#DEDBC8;
+    --ink-dim:#9a9988;
+    --ink-faint:#6b6a5e;
+    --about-bg:#101010;
+    --card-bg:#212121;
+    --accent:#C28A4A; /* subtle warm amber accent */
+  }
+  *{box-sizing:border-box;font-family:'Almarai',-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto',sans-serif}
+  html,body{margin:0;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  ::selection{background:var(--ink);color:#000}
+
+  .serif-it{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400}
+
+  /* Noise textures */
+  .noise-overlay{
+    position:absolute;inset:0;pointer-events:none;
+    opacity:.7;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+  }
+  .bg-noise{
+    position:absolute;inset:0;pointer-events:none;opacity:.15;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
+  }
+
+  /* ============ HERO ============ */
+  .hero{position:relative;height:100vh;min-height:680px;padding:16px;display:flex}
+  @media(min-width:768px){.hero{padding:24px}}
+  .hero-box{
+    position:relative;flex:1;border-radius:20px;overflow:hidden;
+    background:#0a0a0a;
+  }
+  @media(min-width:768px){.hero-box{border-radius:32px}}
+  .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .hero-bg-fallback{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 110%, rgba(194,138,74,.25), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 80% 10%, rgba(225,224,204,.08), transparent 60%),
+      linear-gradient(180deg,#0b0a08 0%, #050505 60%, #000 100%);
+  }
+  .hero-grad{
+    position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0) 60%, rgba(0,0,0,.7) 100%);
+  }
+  .hero-vignette{
+    position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 100% 80% at 50% 50%, transparent 30%, rgba(0,0,0,.5) 100%);
+  }
+
+  /* Navbar - black pill hanging from top */
+  .navbar{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    background:#000;
+    border-bottom-left-radius:18px;border-bottom-right-radius:18px;
+    padding:10px 18px;display:flex;align-items:center;
+    gap:14px;z-index:10;
+  }
+  @media(min-width:640px){.navbar{gap:24px;padding:12px 26px}}
+  @media(min-width:768px){.navbar{gap:48px;padding:14px 36px;border-bottom-left-radius:22px;border-bottom-right-radius:22px}}
+  @media(min-width:1024px){.navbar{gap:56px}}
+  .nav-link{
+    font-size:10px;letter-spacing:.02em;font-weight:400;
+    color:rgba(225,224,204,.8);transition:color .2s;white-space:nowrap;
+  }
+  @media(min-width:640px){.nav-link{font-size:12px}}
+  @media(min-width:768px){.nav-link{font-size:14px}}
+  .nav-link:hover{color:#E1E0CC}
+
+  /* Hero content */
+  .hero-content{
+    position:absolute;bottom:0;left:0;right:0;
+    padding:24px 24px 32px;
+    display:grid;grid-template-columns:1fr;gap:24px;
+    align-items:end;z-index:5;
+  }
+  @media(min-width:768px){.hero-content{padding:32px 40px 44px;grid-template-columns:repeat(12,1fr);gap:32px}}
+  @media(min-width:1024px){.hero-content{padding:40px 56px 56px}}
+
+  .hero-heading{grid-column:1 / -1;position:relative;line-height:.85;letter-spacing:-.07em;font-weight:500;color:var(--ink);margin:0}
+  @media(min-width:768px){.hero-heading{grid-column:1 / span 8}}
+  .hero-heading .h-word{display:inline-block;position:relative;overflow:hidden;vertical-align:bottom}
+  .hero-heading .h-word > span{display:inline-block;transform:translateY(20%);opacity:0;transition:transform .9s cubic-bezier(.16,1,.3,1), opacity .9s cubic-bezier(.16,1,.3,1)}
+  .hero-heading.in .h-word > span{transform:translateY(0);opacity:1}
+  .hero-heading .ast{
+    position:absolute;top:.65em;right:-.3em;font-size:.31em;font-weight:400;color:var(--ink);opacity:0;
+    transition:opacity .6s ease .9s;
+  }
+  .hero-heading.in .ast{opacity:1}
+  /* Sizing */
+  .hero-heading{font-size:26vw}
+  @media(min-width:640px){.hero-heading{font-size:24vw}}
+  @media(min-width:768px){.hero-heading{font-size:22vw}}
+  @media(min-width:1024px){.hero-heading{font-size:20vw}}
+  @media(min-width:1280px){.hero-heading{font-size:19vw}}
+  @media(min-width:1536px){.hero-heading{font-size:20vw}}
+
+  .hero-right{grid-column:1 / -1;display:flex;flex-direction:column;gap:20px;max-width:420px}
+  @media(min-width:768px){.hero-right{grid-column:9 / -1;max-width:none}}
+
+  .hero-desc{
+    color:rgba(222,219,200,.7);font-size:12px;line-height:1.2;margin:0;
+    opacity:0;transform:translateY(20px);
+    transition:opacity .9s cubic-bezier(.16,1,.3,1) .5s, transform .9s cubic-bezier(.16,1,.3,1) .5s;
+  }
+  @media(min-width:640px){.hero-desc{font-size:14px}}
+  @media(min-width:768px){.hero-desc{font-size:16px}}
+  .hero-heading.in ~ .hero-right .hero-desc, .hero-content.in .hero-desc{opacity:1;transform:translateY(0)}
+
+  .hero-cta{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--ink-soft);color:#000;border-radius:999px;
+    padding:6px 6px 6px 22px;align-self:flex-start;cursor:pointer;
+    font-weight:500;font-size:14px;border:0;
+    transition:gap .25s ease;
+    opacity:0;transform:translateY(20px);
+    transition:opacity .9s cubic-bezier(.16,1,.3,1) .7s, transform .9s cubic-bezier(.16,1,.3,1) .7s, gap .25s ease;
+  }
+  @media(min-width:640px){.hero-cta{font-size:16px}}
+  .hero-heading.in ~ .hero-right .hero-cta, .hero-content.in .hero-cta{opacity:1;transform:translateY(0)}
+  .hero-cta:hover{gap:12px}
+  .hero-cta .circle{
+    width:36px;height:36px;border-radius:50%;background:#000;display:grid;place-items:center;
+    transition:transform .25s ease;
+  }
+  @media(min-width:640px){.hero-cta .circle{width:40px;height:40px}}
+  .hero-cta:hover .circle{transform:scale(1.1)}
+  .hero-cta .circle svg{stroke:var(--ink-soft)}
+
+  /* ============ ABOUT ============ */
+  .about{background:#000;padding:88px 20px;display:flex;justify-content:center}
+  @media(min-width:768px){.about{padding:128px 32px}}
+  .about-card{
+    background:var(--about-bg);width:100%;max-width:1100px;
+    border-radius:24px;
+    padding:72px 28px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:36px;
+  }
+  @media(min-width:768px){.about-card{padding:112px 56px;border-radius:32px;gap:44px}}
+
+  .about-label{
+    font-size:10px;letter-spacing:.18em;color:var(--ink);text-transform:uppercase;
+    font-weight:700;
+  }
+  @media(min-width:640px){.about-label{font-size:12px}}
+
+  .about-heading{
+    margin:0;max-width:880px;
+    font-size:30px;line-height:.95;color:var(--ink);font-weight:400;
+    display:inline-flex;flex-wrap:wrap;justify-content:center;gap:.18em .25em;
+    letter-spacing:-.01em;
+  }
+  @media(min-width:640px){.about-heading{font-size:38px}}
+  @media(min-width:768px){.about-heading{font-size:48px;line-height:.9}}
+  @media(min-width:1024px){.about-heading{font-size:58px}}
+  @media(min-width:1280px){.about-heading{font-size:68px}}
+  .about-heading .a-word{display:inline-block;overflow:hidden;line-height:1}
+  .about-heading .a-word > span{display:inline-block;transform:translateY(115%);opacity:0;transition:transform .8s cubic-bezier(.16,1,.3,1), opacity .8s cubic-bezier(.16,1,.3,1)}
+  .about-heading.in .a-word > span{transform:translateY(0);opacity:1}
+
+  .about-body{
+    max-width:780px;color:var(--ink-soft);
+    font-size:13px;line-height:1.6;margin:0;
+  }
+  @media(min-width:640px){.about-body{font-size:14px}}
+  @media(min-width:768px){.about-body{font-size:16px;line-height:1.7}}
+  .about-body .ch{display:inline-block;opacity:.2;transition:opacity .15s linear}
+  .about-body .ch.sp{width:.25em}
+
+  /* ============ FEATURES ============ */
+  .features{position:relative;min-height:100vh;background:#000;padding:88px 20px 100px}
+  @media(min-width:768px){.features{padding:128px 32px 140px}}
+  .features-inner{position:relative;z-index:2;max-width:1400px;margin:0 auto}
+
+  .features-head{
+    margin:0 0 56px;
+    font-size:22px;line-height:1.15;font-weight:400;letter-spacing:-.01em;
+    display:inline-flex;flex-wrap:wrap;gap:.18em .25em;
+  }
+  @media(min-width:640px){.features-head{font-size:28px}}
+  @media(min-width:768px){.features-head{font-size:34px;margin-bottom:72px}}
+  @media(min-width:1024px){.features-head{font-size:42px}}
+  .features-head .f-word{display:inline-block;overflow:hidden;line-height:1}
+  .features-head .f-word > span{display:inline-block;transform:translateY(115%);opacity:0;transition:transform .8s cubic-bezier(.16,1,.3,1), opacity .8s cubic-bezier(.16,1,.3,1)}
+  .features-head.in .f-word > span{transform:translateY(0);opacity:1}
+  .features-head .dim{color:#6b6b6b}
+
+  .feat-grid{
+    display:grid;grid-template-columns:1fr;gap:12px;
+  }
+  @media(min-width:768px){.feat-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+  @media(min-width:1024px){.feat-grid{grid-template-columns:repeat(4,1fr);gap:4px;height:480px}}
+
+  .feat-card{
+    position:relative;background:var(--card-bg);border-radius:18px;overflow:hidden;
+    padding:24px;display:flex;flex-direction:column;
+    min-height:380px;
+    opacity:0;transform:scale(.95);
+    transition:opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
+  }
+  @media(min-width:1024px){.feat-card{min-height:0;height:100%;border-radius:14px}}
+  .feat-card.in{opacity:1;transform:scale(1)}
+
+  .feat-card.media{padding:0;background:#1a1a1a}
+  .feat-card.media .media-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .feat-card.media .media-fallback{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 70% 50% at 30% 30%, rgba(225,224,204,.18), transparent 55%),
+      radial-gradient(ellipse 80% 70% at 80% 90%, rgba(194,138,74,.3), transparent 60%),
+      linear-gradient(160deg,#262420 0%,#0d0c0a 100%);
+  }
+  .feat-card.media .media-grain{
+    position:absolute;inset:0;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/></svg>");
+    mix-blend-mode:overlay;opacity:.6;pointer-events:none;
+  }
+  .feat-card.media .media-vign{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%, rgba(0,0,0,.7));pointer-events:none}
+  .feat-card.media .media-label{
+    position:absolute;left:24px;bottom:24px;right:24px;z-index:2;
+    color:#E1E0CC;font-size:22px;font-weight:400;line-height:1.05;letter-spacing:-.01em;
+  }
+  @media(min-width:1024px){.feat-card.media .media-label{font-size:24px}}
+
+  .feat-icon{
+    width:40px;height:40px;border-radius:10px;background:#2c2c2c;
+    display:grid;place-items:center;color:var(--ink);margin-bottom:24px;
+    flex-shrink:0;
+  }
+  @media(min-width:640px){.feat-icon{width:48px;height:48px}}
+  .feat-icon svg{width:20px;height:20px}
+
+  .feat-num{
+    font-size:11px;color:var(--ink-faint);letter-spacing:.1em;margin-bottom:8px;
+    font-weight:700;
+  }
+  .feat-title{
+    font-size:20px;color:var(--ink);font-weight:700;margin:0 0 18px;line-height:1.1;
+    letter-spacing:-.01em;
+  }
+  @media(min-width:1024px){.feat-title{font-size:22px}}
+
+  .feat-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;flex:1}
+  .feat-list li{
+    display:flex;gap:10px;align-items:flex-start;
+    color:#a3a39a;font-size:13px;line-height:1.4;
+  }
+  .feat-list svg{flex-shrink:0;margin-top:2px;color:var(--ink);width:14px;height:14px}
+
+  .feat-more{
+    margin-top:18px;display:inline-flex;align-items:center;gap:8px;
+    color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;
+    transition:gap .2s ease;align-self:flex-start;
+  }
+  .feat-more:hover{gap:12px}
+  .feat-more svg{transform:rotate(-45deg);transition:transform .25s ease}
+  .feat-more:hover svg{transform:rotate(-45deg) translateX(2px)}
+
+  /* ============ FOOTER ============ */
+  footer{background:#000;padding:64px 20px 48px;border-top:1px solid #141414;text-align:center}
+  footer .mark{font-size:11px;letter-spacing:.2em;color:var(--ink-faint);text-transform:uppercase;font-weight:700}
+  footer .line{font-size:13px;color:var(--ink-dim);margin-top:14px}
+  footer .small{font-size:11px;color:#555;margin-top:24px;letter-spacing:.05em}
+
+  /* helpers */
+  .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  /* card-layout-tweak: 4-col on lg by default; force grid via attr */
+  body[data-cards="grid"] .feat-grid{
+    grid-template-columns:repeat(2,1fr);gap:8px;height:auto;
+  }
+  body[data-cards="grid"] .feat-card{min-height:340px;height:auto}
+
+  /* accent variants */
+  body[data-accent="cream"]{--accent:#DEDBC8}
+  body[data-accent="amber"]{--accent:#C28A4A}
+  body[data-accent="rust"]{--accent:#9B4F2B}
+</style>
+</head>
+<body data-cards="cols" data-accent="amber">
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="hero-box">
+    <div class="hero-bg-fallback"></div>
+    <div class="noise-overlay"></div>
+    <div class="hero-grad"></div>
+    <div class="hero-vignette"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar" aria-label="Main">
+      <a href="#about" class="nav-link">Our story</a>
+      <a href="#features" class="nav-link">Method</a>
+      <a href="#features" class="nav-link">Programs</a>
+      <a href="#features" class="nav-link">Library</a>
+      <a href="#contact" class="nav-link">Inquiries</a>
+    </nav>
+
+    <!-- Hero content -->
+    <div class="hero-content" id="heroContent">
+      <h1 class="hero-heading" data-pullup data-asterisk="1" data-word="JOURNEY">
+        <!-- Populated by JS for word-pull animation -->
+        JOURNEY
+      </h1>
+      <div class="hero-right">
+        <p class="hero-desc">
+          Xuan Tai IELTS is a small, deliberate studio for serious learners — bound not by shortcuts, scripted answers, or score-chasing, but by a quiet hunger to write, speak, and think with real precision.
+        </p>
+        <button class="hero-cta" type="button" onclick="const t=document.getElementById('features');window.scrollTo({top:t.getBoundingClientRect().top+window.pageYOffset,behavior:'smooth'})">
+          Start your journey
+          <span class="circle" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ ABOUT ============ -->
+<section class="about" id="about">
+  <div class="about-card">
+    <div class="about-label">Coach &middot; Founder</div>
+    <h2 class="about-heading" data-pullup-multi>
+      <span data-segment="normal">I am Xuan Tai,</span>
+      <span data-segment="italic">a self-taught IELTS coach.</span>
+      <span data-segment="normal">I have skills in writing critique, speaking diagnostics, and band-by-band strategy.</span>
+    </h2>
+    <p class="about-body" data-char-reveal>
+      Over the last eight years, I have guided more than 2,400 Vietnamese learners from band 5 plateaus to band 7.5 and beyond — working with university candidates, working professionals, and international school students. Together, we have built a way of preparing for IELTS that is slow, honest, and built to last past the test.
+    </p>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features" id="features">
+  <div class="bg-noise"></div>
+  <div class="features-inner">
+    <h2 class="features-head" data-pullup-multi>
+      <span data-segment="normal">Studio-grade roadmaps for serious learners.</span>
+      <span data-segment="dim">Built for clarity. Powered by craft.</span>
+    </h2>
+
+    <div class="feat-grid">
+
+      <!-- Card 1: media -->
+      <article class="feat-card media" data-stagger="0">
+        <div class="media-fallback"></div>
+        <div class="media-grain"></div>
+        <div class="media-vign"></div>
+        <image-slot id="feat-media" placeholder="Drop a coaching photo or short video poster" shape="rect" style="position:absolute;inset:0;width:100%;height:100%;z-index:1"></image-slot>
+        <div class="media-label">Your IELTS canvas.</div>
+      </article>
+
+      <!-- Card 2: Personalised Roadmap -->
+      <article class="feat-card" data-stagger="1">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h13M3 12h9M3 18h13"/><circle cx="20" cy="6" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="20" cy="18" r="1.5"/></svg>
+        </div>
+        <div class="feat-num">01</div>
+        <h3 class="feat-title">Personalised Roadmap.</h3>
+        <ul class="feat-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Diagnostic mock across all four skills, with band-level breakdown.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>A 12-week plan calibrated to your target band and test date.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Weekly checkpoints with rewritten goals as you improve.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Direct 1-on-1 access when something stops making sense.</li>
+        </ul>
+        <a href="#" class="feat-more">
+          Learn more
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </article>
+
+      <!-- Card 3: Smart Feedback -->
+      <article class="feat-card" data-stagger="2">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="feat-num">02</div>
+        <h3 class="feat-title">Smart Critique.</h3>
+        <ul class="feat-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Sentence-level writing marks from a real examiner, not a rubric checker.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>AI pre-analysis flags repeat errors before each human review.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Speaking recordings annotated for pronunciation, fluency, lexical range.</li>
+        </ul>
+        <a href="#" class="feat-more">
+          Learn more
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </article>
+
+      <!-- Card 4: Speaking Studio -->
+      <article class="feat-card" data-stagger="3">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+        </div>
+        <div class="feat-num">03</div>
+        <h3 class="feat-title">Speaking Studio.</h3>
+        <ul class="feat-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Weekly live sessions with real Part 1, 2, 3 conditions and timing.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Pronunciation drills tuned to Vietnamese-speaker patterns.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Mock test bookings synced to your calendar in one tap.</li>
+        </ul>
+        <a href="#" class="feat-more">
+          Learn more
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer id="contact">
+  <div class="mark">Xuan Tai &middot; IELTS</div>
+  <div class="line">Quiet practice. Honest feedback. A real band.</div>
+  <div class="small">© 2026 &middot; Inquiries: hello@xuantai.studio</div>
+</footer>
+
+<script>
+  /* ============ ANIMATIONS ============ */
+
+  // 1. Words pull-up (single string) — for HERO heading
+  function setupPullup(el){
+    const text = el.dataset.word || el.textContent.trim();
+    const showAst = el.dataset.asterisk === '1';
+    el.innerHTML = '';
+    const words = text.split(/\s+/);
+    words.forEach((w, wi) => {
+      const word = document.createElement('span');
+      word.className = 'h-word';
+      // Per spec asterisk goes on final 'a' — for "JOURNEY" we just stick it on the last char of last word.
+      const isLast = wi === words.length - 1;
+      const chars = w.split('');
+      chars.forEach((c, ci) => {
+        const s = document.createElement('span');
+        s.textContent = c;
+        s.style.transitionDelay = (wi * 0.08 + ci * 0.02) + 's';
+        word.appendChild(s);
+      });
+      el.appendChild(word);
+      if (wi < words.length - 1) el.appendChild(document.createTextNode(' '));
+      if (isLast && showAst){
+        const a = document.createElement('span');
+        a.className = 'ast';
+        a.textContent = '*';
+        word.appendChild(a);
+      }
+    });
+  }
+
+  // 2. Multi-style pull-up — array of segments inside the heading
+  function setupMultiPullup(el){
+    const segments = [...el.querySelectorAll('[data-segment]')];
+    el.innerHTML = '';
+    let wordIndex = 0;
+    segments.forEach((seg, si) => {
+      const styleType = seg.dataset.segment;
+      const words = seg.textContent.trim().split(/\s+/);
+      words.forEach((w, wi) => {
+        const word = document.createElement('span');
+        word.className = 'f-word a-word';
+        if (styleType === 'italic') word.classList.add('serif-it');
+        if (styleType === 'dim') word.classList.add('dim');
+        const inner = document.createElement('span');
+        inner.textContent = w;
+        inner.style.transitionDelay = (wordIndex * 0.06) + 's';
+        word.appendChild(inner);
+        el.appendChild(word);
+        el.appendChild(document.createTextNode(' '));
+        wordIndex++;
+      });
+    });
+  }
+
+  // 3. Char reveal — wraps each char in a span, then maps scroll → opacity
+  function setupCharReveal(el){
+    const text = el.textContent;
+    el.innerHTML = '';
+    const chars = [];
+    [...text].forEach(c => {
+      const s = document.createElement('span');
+      s.className = 'ch' + (c === ' ' ? ' sp' : '');
+      s.textContent = c === ' ' ? ' ' : c;
+      el.appendChild(s);
+      chars.push(s);
+    });
+    el.__chars = chars;
+  }
+
+  function updateCharReveal(el){
+    const chars = el.__chars; if (!chars) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight;
+    // progress: when top crosses 0.8 vh = 0, when bottom crosses 0.2 vh = 1
+    const startY = vh * 0.8;
+    const endY = vh * 0.2;
+    const elTop = rect.top;
+    const elBot = rect.bottom;
+    // Map scroll: progress goes from 0 → 1 as elTop moves from startY → endY
+    const range = startY - endY;
+    const p = Math.max(0, Math.min(1, (startY - elTop) / range));
+    const total = chars.length;
+    chars.forEach((s, i) => {
+      const cp = i / total;
+      // each char's local progress: range [cp-0.1, cp+0.05]
+      const local = (p - (cp - 0.1)) / 0.15;
+      const o = Math.max(0.2, Math.min(1, 0.2 + local * 0.8));
+      s.style.opacity = o;
+    });
+  }
+
+  /* Run on DOM ready */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Set up pullup hero
+    document.querySelectorAll('[data-pullup]').forEach(setupPullup);
+    document.querySelectorAll('[data-pullup-multi]').forEach(setupMultiPullup);
+    document.querySelectorAll('[data-char-reveal]').forEach(setupCharReveal);
+
+    // IntersectionObserver to trigger animations
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting){
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('[data-pullup], [data-pullup-multi]').forEach(el => io.observe(el));
+
+    // Card stagger
+    const cardIO = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting){
+          const idx = parseInt(e.target.dataset.stagger || 0, 10);
+          e.target.style.transitionDelay = (idx * 0.15) + 's';
+          e.target.classList.add('in');
+          cardIO.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '-100px' });
+    document.querySelectorAll('.feat-card').forEach(c => cardIO.observe(c));
+
+    // Char reveal scroll handler
+    const charEls = [...document.querySelectorAll('[data-char-reveal]')];
+    const onScroll = () => charEls.forEach(updateCharReveal);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+
+    // Trigger hero immediately
+    requestAnimationFrame(() => {
+      const h = document.querySelector('.hero-heading');
+      if (h) h.classList.add('in');
+      const c = document.getElementById('heroContent');
+      if (c) c.classList.add('in');
+    });
+  });
+</script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "heroWord": "JOURNEY",
+    "accent": "amber",
+    "cardLayout": "cols",
+    "showAsterisk": true,
+    "italicSegment": "a self-taught IELTS coach."
+  }/*EDITMODE-END*/;
+
+  function TweaksApp(){
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+    // Apply tweaks to DOM
+    useEffect(() => {
+      document.body.dataset.accent = t.accent;
+      document.body.dataset.cards = t.cardLayout;
+
+      // Hero word
+      const hero = document.querySelector('.hero-heading');
+      if (hero){
+        hero.dataset.word = t.heroWord;
+        hero.dataset.asterisk = t.showAsterisk ? '1' : '0';
+        hero.classList.remove('in');
+        // re-run pullup
+        setupPullup(hero);
+        requestAnimationFrame(() => hero.classList.add('in'));
+      }
+    }, [t.accent, t.cardLayout, t.heroWord, t.showAsterisk]);
+
+    return (
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Hero">
+          <TweakText
+            label="Giant word"
+            value={t.heroWord}
+            onChange={v => setTweak('heroWord', v.toUpperCase())}
+          />
+          <TweakToggle
+            label="Asterisk *"
+            value={t.showAsterisk}
+            onChange={v => setTweak('showAsterisk', v)}
+          />
+        </TweakSection>
+
+        <TweakSection label="Palette">
+          <TweakRadio
+            label="Accent"
+            value={t.accent}
+            options={[
+              { value: 'cream', label: 'Cream' },
+              { value: 'amber', label: 'Amber' },
+              { value: 'rust',  label: 'Rust'  },
+            ]}
+            onChange={v => setTweak('accent', v)}
+          />
+        </TweakSection>
+
+        <TweakSection label="Features">
+          <TweakRadio
+            label="Card layout"
+            value={t.cardLayout}
+            options={[
+              { value: 'cols', label: '4 cols' },
+              { value: 'grid', label: '2x2 grid' },
+            ]}
+            onChange={v => setTweak('cardLayout', v)}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    );
+  }
+
+  const mount = document.createElement('div');
+  document.body.appendChild(mount);
+  ReactDOM.createRoot(mount).render(<TweaksApp />);
+</script>
+
+</body>
+</html>

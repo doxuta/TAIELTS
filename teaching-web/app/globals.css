@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.625rem;
+    --font-inter: 'Inter', system-ui, sans-serif;
+    --font-cal: 'Cal Sans', 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * {
+    @apply border-surface-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface-secondary text-ink font-sans;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-surface-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-ink-placeholder; }
+
+  /* Focus visible */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-surface;
+  }
+}
+
+@layer components {
+  /* ===== SIDEBAR ===== */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+           text-sidebar-foreground/60 transition-all duration-150 cursor-pointer
+           hover:text-sidebar-foreground hover:bg-sidebar-accent;
+  }
+
+  .sidebar-link.active {
+    @apply text-sidebar-accent-foreground bg-sidebar-accent
+           shadow-[inset_0_0_0_1px_rgba(99,102,241,0.15)];
+  }
+
+  .sidebar-link .icon {
+    @apply w-4 h-4 flex-shrink-0;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    @apply bg-surface rounded-2xl border border-surface-border shadow-card
+           transition-shadow duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-pointer;
+  }
+
+  /* ===== STAT CARDS ===== */
+  .stat-card {
+    @apply card p-6;
+  }
+
+  /* ===== BADGES ===== */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-brand { @apply badge bg-brand-50 text-brand-700; }
+  .badge-amber { @apply badge bg-amber-50 text-amber-700; }
+  .badge-green { @apply badge bg-emerald-50 text-emerald-700; }
+  .badge-red   { @apply badge bg-red-50 text-red-700; }
+  .badge-slate { @apply badge bg-surface-tertiary text-ink-secondary; }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
+           text-sm font-medium transition-all duration-150 cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none
+           focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700
+           shadow-sm hover:shadow-glow active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn bg-surface-tertiary text-ink-secondary border border-surface-border
+           hover:bg-surface-border hover:text-ink active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply btn text-ink-secondary hover:bg-surface-tertiary hover:text-ink;
+  }
+
+  .btn-amber {
+    @apply btn bg-amber-500 text-white hover:bg-amber-600
+           shadow-sm hover:shadow-glow-amber active:scale-[0.98];
+  }
+
+  .btn-icon {
+    @apply flex items-center justify-center w-9 h-9 rounded-xl
+           text-ink-tertiary hover:text-ink hover:bg-surface-tertiary
+           transition-all duration-150 cursor-pointer;
+  }
+
+  /* ===== INPUTS ===== */
+  .input {
+    @apply w-full px-3.5 py-2.5 rounded-xl border border-surface-border bg-surface
+           text-sm text-ink placeholder:text-ink-placeholder
+           transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-ink-secondary mb-1.5;
+  }
+
+  /* ===== SESSION TYPE PILLS ===== */
+  .session-A {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
+           bg-violet-100 text-violet-700;
+  }
+
+  .session-B {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
+           bg-sky-100 text-sky-700;
+  }
+
+  .session-C {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
+           bg-emerald-100 text-emerald-700;
+  }
+
+  /* ===== SKILL TAGS ===== */
+  .skill-tag {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium
+           bg-surface-tertiary text-ink-secondary;
+  }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header {
+    @apply mb-8;
+  }
+
+  .page-title {
+    @apply text-2xl font-display font-semibold text-ink tracking-tight;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-ink-secondary mt-1;
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    @apply h-px w-full bg-surface-border;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  .animate-fade-up { animation: fadeUp 0.5s ease-out both; }
+  .animate-fade-in { animation: fadeIn 0.4s ease-out both; }
+
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+}
+
+/* ===== LANDING PAGE ===== */
+.hero-glow {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.3), transparent);
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, #818CF8 0%, #C084FC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== LIQUID GLASS ===== */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ===== FADE-RISE ANIMATIONS ===== */
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-rise         { animation: fade-rise 0.8s ease-out both; }
+.animate-fade-rise-delay   { animation: fade-rise 0.8s ease-out 0.2s both; }
+.animate-fade-rise-delay-2 { animation: fade-rise 0.8s ease-out 0.4s both; }
+
+/* ===== NOISE TEXTURES ===== */
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 300px 300px;
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n2)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 300px 300px;
+}

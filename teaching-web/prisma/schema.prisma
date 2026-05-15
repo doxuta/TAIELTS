@@ -1,0 +1,344 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("STUDENT") // TEACHER, STUDENT
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Teacher relations
+  studentsAsTeacher Student[] @relation("TeacherStudents")
+  lessonsCreated    LessonPlan[]
+  assignmentsCreated Assignment[]
+  reportsCreated    MonthlyReport[]
+
+  // Student relation
+  studentProfile Student? @relation("StudentUser")
+
+  accounts Account[]
+  sessions Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Student {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  teacherId       String
+  
+  // Personal Info (from MASTER doc)
+  fullName        String
+  dateOfBirth     String?
+  occupation      String?   @default("Sinh viên Luật")
+  phone           String?
+  slackChannel    String?
+  
+  // Learning Goals
+  year1Goal       String?
+  year2Direction  String?   // IELTS_ACADEMIC / LEGAL_ENGLISH / GENERAL / etc.
+  targetBand      Float?    // only relevant Year 2
+  
+  // Entry Assessment (from test đầu vào)
+  testDate        DateTime?
+  grammarScore    Float?    // /20
+  readingScore    Float?
+  listeningScore  Float?
+  writingScore    Float?
+  speakingScore   Float?
+  entryNotes      String?
+  currentMonth    Int       @default(1)  // 1-12
+  currentWeek     Int       @default(1)  // 1-52
+  currentPhase    String    @default("YEAR1_FOUNDATION") // YEAR1_FOUNDATION, YEAR2_IELTS
+  
+  // Stats
+  totalSessions   Int       @default(0)
+  attendanceRate  Float?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation("StudentUser", fields: [userId], references: [id], onDelete: Cascade)
+  teacher         User      @relation("TeacherStudents", fields: [teacherId], references: [id])
+  
+  lessonSessions  LessonSession[]
+  assignments     StudentAssignment[]
+  reports         MonthlyReport[]
+  vocabularyCards VocabCard[]
+  journalEntries  JournalEntry[]
+  weeklyProgress  WeeklyProgress[]
+  monthlyRubrics  MonthlyRubric[]
+}
+
+model LessonPlan {
+  id              String      @id @default(cuid())
+  title           String
+  sessionNumber   Int
+  sessionType     String      // A, B, C
+  week            Int
+  month           Int
+  date            DateTime?
+  location        String?
+  
+  // Content structure (from template)
+  grammarTopic    String?
+  vocabularyFocus String?
+  listeningFocus  String?
+  speakingFocus   String?
+  readingFocus    String?
+  writingFocus    String?
+  
+  // Time allocation (minutes)
+  warmupMin       Int         @default(15)
+  grammarMin      Int         @default(0)
+  speakingMin     Int         @default(0)
+  listeningMin    Int         @default(0)
+  pronunciationMin Int        @default(0)
+  readingMin      Int         @default(0)
+  writingMin      Int         @default(0)
+  vocabMin        Int         @default(0)
+  reviewMin       Int         @default(10)
+  
+  // Rich content (JSON string)
+  warmupContent   String?
+  mainContent     String?     // JSON: { warmup, content, summary, homework }
+  homework        String?
+  notes           String?
+  
+  status          String      @default("DRAFT") // DRAFT, READY, COMPLETED, CANCELLED
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  createdById     String
+  
+  createdBy       User        @relation(fields: [createdById], references: [id])
+  sessions        LessonSession[]
+}
+
+model LessonSession {
+  id              String    @id @default(cuid())
+  studentId       String
+  lessonPlanId    String?
+  sessionType     String    // A, B, C
+  week            Int
+  month           Int
+  date            DateTime
+  
+  // Attendance & Quality
+  attended        Boolean   @default(false)
+  quality         Int?      // 1-5
+  attitude        Int?      // 1-5
+  comprehension   Int?      // 1-5
+  
+  // Post-session notes
+  noteForTeacher  String?
+  errorLog        String?   // errors to add to Sổ Tay Lỗi Sai
+  homework        String?
+  homeworkDone    Boolean?
+  
+  // Skills practiced this session
+  grammarDone     Boolean   @default(false)
+  listeningDone   Boolean   @default(false)
+  speakingDone    Boolean   @default(false)
+  readingDone     Boolean   @default(false)
+  writingDone     Boolean   @default(false)
+  vocabDone       Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lessonPlan      LessonPlan? @relation(fields: [lessonPlanId], references: [id])
+}
+
+model WeeklyProgress {
+  id              String    @id @default(cuid())
+  studentId       String
+  week            Int
+  month           Int
+  year            Int       @default(2026)
+  
+  sessionsCompleted Int     @default(0) // 0-3
+  newWords        Int       @default(0)
+  highlights      String?
+  challenges      String?
+  teacherNote     String?
+  
+  createdAt       DateTime  @default(now())
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, week, year])
+}
+
+model MonthlyRubric {
+  id              String    @id @default(cuid())
+  studentId       String
+  month           Int
+  year            Int       @default(2026)
+  
+  // 6 Foundation Skills (1-5 scale, no IELTS band forced in Year 1)
+  grammarScore    Float?
+  vocabularyScore Float?
+  listeningScore  Float?
+  speakingScore   Float?
+  readingScore    Float?
+  writingScore    Float?
+  
+  // Qualitative
+  sessionsAttended Int      @default(0)
+  strongPoints    String?
+  improvements    String?
+  nextMonthFocus  String?
+  
+  createdAt       DateTime  @default(now())
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, month, year])
+}
+
+model Assignment {
+  id              String          @id @default(cuid())
+  title           String
+  type            String          // WEEKLY_EXERCISE / MINI_TEST / MONTHLY_TEST
+  week            Int?
+  month           Int
+  dueDate         DateTime?
+  
+  // Content
+  partA           String?   // Vocabulary section
+  partB           String?   // Grammar section
+  partC           String?   // Skills section
+  answerKey       String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdById     String
+  
+  createdBy       User            @relation(fields: [createdById], references: [id])
+  submissions     StudentAssignment[]
+}
+
+model StudentAssignment {
+  id              String    @id @default(cuid())
+  studentId       String
+  assignmentId    String
+  
+  submittedAt     DateTime?
+  submissionText  String?
+  submissionFile  String?   // file path
+  
+  // Grading
+  score           Float?
+  feedback        String?
+  gradedAt        DateTime?
+  
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignment      Assignment @relation(fields: [assignmentId], references: [id])
+  
+  @@unique([studentId, assignmentId])
+}
+
+model MonthlyReport {
+  id              String    @id @default(cuid())
+  studentId       String
+  month           Int
+  year            Int       @default(2026)
+  title           String?
+  
+  // Generated content
+  content         String    // Full report HTML/markdown
+  highlights      String?
+  improvements    String?
+  nextMonthGoals  String?
+  
+  sentAt          DateTime?
+  sentViaEmail    Boolean   @default(false)
+  sentViaSlack    Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdById     String
+  
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdBy       User      @relation(fields: [createdById], references: [id])
+  
+  @@unique([studentId, month, year])
+}
+
+model VocabCard {
+  id              String    @id @default(cuid())
+  studentId       String
+  word            String
+  definition      String?
+  example         String?
+  pronunciation   String?
+  topic           String?
+  week            Int?
+  month           Int?
+  
+  // Spaced repetition
+  interval        Int       @default(1)
+  easeFactor      Float     @default(2.5)
+  repetitions     Int       @default(0)
+  dueDate         DateTime  @default(now())
+  lastReviewedAt  DateTime?
+  
+  createdAt       DateTime  @default(now())
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([studentId, word])
+}
+
+model JournalEntry {
+  id              String    @id @default(cuid())
+  studentId       String
+  week            Int
+  month           Int
+  quarter         Int       // 1-4
+  entryType       String    // WEEKLY / MILESTONE / TEACHER_NOTE
+  
+  content         String
+  teacherNote     String?
+  milestone       String?   // e.g. "Xong thì cơ bản", "Nói 2 phút"
+  
+  createdAt       DateTime  @default(now())
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
