@@ -6,7 +6,7 @@
  */
 import { WRITING_TASK1_DESCRIPTORS, WRITING_TASK2_DESCRIPTORS, SPEAKING_DESCRIPTORS } from '@/lib/descriptors'
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
 
 interface CriterionScore {
   band: number
@@ -46,7 +46,7 @@ async function callGemini(prompt: string): Promise<any> {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.3, // low temp for consistent scoring
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
         responseMimeType: 'application/json',
       },
     }),
