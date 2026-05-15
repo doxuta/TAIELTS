@@ -106,6 +106,10 @@ model Student {
   journalEntries  JournalEntry[]
   weeklyProgress  WeeklyProgress[]
   monthlyRubrics  MonthlyRubric[]
+  mockTestAttempts MockTestAttempt[]
+  streakRecord    StreakRecord?
+  dailyActivities DailyActivity[]
+  errorEntries    ErrorEntry[]
 }
 
 model LessonPlan {
@@ -309,22 +313,218 @@ model VocabCard {
   word            String
   definition      String?
   example         String?
-  pronunciation   String?
+  pronunciation   String?   // IPA
   topic           String?
   week            Int?
   month           Int?
-  
-  // Spaced repetition
+
+  // Top-tier enrichment
+  band            Float?    // 5.0 / 6.0 / 7.0 / 8.0 — target band where this word is useful
+  cefr            String?   // A2 / B1 / B2 / C1 / C2
+  isAWL           Boolean   @default(false)  // Academic Word List (Coxhead)
+  partOfSpeech    String?   // noun / verb / adj / adv
+  synonyms        String?   // CSV
+  antonyms        String?   // CSV
+  collocations    String?   // JSON array
+  audioUrl        String?
+
+  // SM-2 spaced repetition (legacy, retained for backward compat)
   interval        Int       @default(1)
   easeFactor      Float     @default(2.5)
   repetitions     Int       @default(0)
   dueDate         DateTime  @default(now())
   lastReviewedAt  DateTime?
-  
+
+  // FSRS-6 fields (optional, used by lib/srs.ts when available)
+  stability       Float?
+  difficulty      Float?
+  state           String?   // "new" / "learning" / "review" / "relearning"
+
   createdAt       DateTime  @default(now())
   student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  
+
   @@unique([studentId, word])
+}
+
+// ============================================================
+// Mock Test Infrastructure (Cambridge-format)
+// ============================================================
+
+model MockTest {
+  id            String   @id @default(cuid())
+  title         String           // e.g. "TAIELTS Practice Test 1 — Academic"
+  testType      String           // ACADEMIC / GENERAL
+  source        String?          // "Cambridge 18", "TAIELTS Original"
+  targetBand    Float?           // 6.5 / 7.0 / 7.5
+  description   String?
+  isPublished   Boolean  @default(true)
+  parts         MockTestPart[]
+  attempts      MockTestAttempt[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model MockTestPart {
+  id            String   @id @default(cuid())
+  testId        String
+  skill         String           // LISTENING / READING / WRITING / SPEAKING
+  partNumber    Int              // 1-4 for Listening, 1-3 for Reading, etc.
+  title         String?
+  passage       String?          // Reading text or listening transcript
+  audioUrl      String?
+  imageUrl      String?          // for map/diagram labelling
+  timeMinutes   Int
+  instructions  String?
+  questions     MockTestQuestion[]
+  test          MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+}
+
+model MockTestQuestion {
+  id            String   @id @default(cuid())
+  partId        String
+  questionNumber Int
+  questionType  String           // MCQ_SINGLE / MCQ_MULTIPLE / TFN / YNNG / MATCHING_HEADING / MATCHING_INFO / SENTENCE_COMPLETION / SUMMARY_COMPLETION / TABLE_COMPLETION / DIAGRAM_LABEL / SHORT_ANSWER / MAP_LABEL / CLASSIFICATION / ESSAY_TASK1 / ESSAY_TASK2 / SPEAKING_PART1 / SPEAKING_PART2 / SPEAKING_PART3
+  prompt        String
+  options       String?          // JSON array of choices (for MCQ/matching)
+  correctAnswer String           // text answer or option key(s)
+  explanation   String?
+  points        Int      @default(1)
+  answers       MockTestAnswer[]
+  part          MockTestPart @relation(fields: [partId], references: [id], onDelete: Cascade)
+}
+
+model MockTestAttempt {
+  id            String   @id @default(cuid())
+  studentId     String
+  testId        String
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  // Per-skill band scores (0-9, .5 steps)
+  listeningScore Float?
+  readingScore   Float?
+  writingScore   Float?
+  speakingScore  Float?
+  overallBand    Float?
+
+  // AI feedback summary
+  aiSummary      String?  // JSON: { strengths, weaknesses, suggestions }
+
+  answers       MockTestAnswer[]
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  test          MockTest @relation(fields: [testId], references: [id])
+}
+
+model MockTestAnswer {
+  id            String   @id @default(cuid())
+  attemptId     String
+  questionId    String
+  answer        String           // student's answer
+  isCorrect     Boolean?
+  aiScore       Float?           // for Writing/Speaking subjective questions
+  aiFeedback    String?          // JSON detailed feedback
+
+  attempt       MockTestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question      MockTestQuestion @relation(fields: [questionId], references: [id])
+
+  @@unique([attemptId, questionId])
+}
+
+// ============================================================
+// Strategy Library (top-tier content)
+// ============================================================
+
+model StrategyArticle {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  skill         String           // LISTENING / READING / WRITING / SPEAKING / GRAMMAR / VOCABULARY / PRONUNCIATION
+  band          Float            // target band 5/6/7/8
+  title         String
+  summary       String
+  content       String           // Markdown
+  examples      String?          // JSON sample answers / examples
+  tags          String?          // CSV
+  readingTimeMin Int     @default(5)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SampleEssay {
+  id            String   @id @default(cuid())
+  taskType      String           // TASK_1_ACADEMIC / TASK_1_GENERAL / TASK_2
+  band          Float            // 6.0 / 7.0 / 8.0 / 9.0
+  prompt        String
+  essay         String
+  wordCount     Int
+  examinerNotes String?
+  topics        String?          // CSV
+  createdAt     DateTime @default(now())
+}
+
+model SpeakingCueCard {
+  id            String   @id @default(cuid())
+  part          Int              // 1 / 2 / 3
+  topic         String
+  prompt        String
+  bulletPoints  String?          // JSON array (for Part 2)
+  followUps     String?          // JSON array (for Part 3 discussion)
+  band          Float?
+  sampleAnswer  String?
+  createdAt     DateTime @default(now())
+}
+
+// ============================================================
+// Gamification
+// ============================================================
+
+model StreakRecord {
+  id            String   @id @default(cuid())
+  studentId     String   @unique
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  totalXP       Int      @default(0)
+  level         Int      @default(1)
+  lastActivityDate DateTime?
+  freezeCount   Int      @default(2)  // 2 free freezes/month
+  freezesUsedThisMonth Int @default(0)
+  updatedAt     DateTime @updatedAt
+
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model DailyActivity {
+  id            String   @id @default(cuid())
+  studentId     String
+  date          DateTime         // date only (00:00 UTC of that day)
+  xpEarned      Int      @default(0)
+  vocabReviewed Int      @default(0)
+  minutesStudied Int     @default(0)
+  goalMet       Boolean  @default(false)
+
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+}
+
+// ============================================================
+// Error Notebook (Sổ tay lỗi sai)
+// ============================================================
+
+model ErrorEntry {
+  id            String   @id @default(cuid())
+  studentId     String
+  skill         String           // LISTENING / READING / WRITING / SPEAKING / GRAMMAR / VOCABULARY / PRONUNCIATION
+  category      String           // "thì", "giới từ", "collocation", "phát âm /θ/", etc.
+  wrongVersion  String
+  correctVersion String
+  explanation   String?
+  exampleSentence String?
+  source        String?          // "Session #12", "Mock Test 3", "Writing Task 2"
+  resolved      Boolean @default(false)
+  resolvedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model JournalEntry {
