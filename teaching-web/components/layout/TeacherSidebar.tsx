@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Map, BookOpen, ClipboardList,
   BarChart3, BookMarked, Settings, LogOut, GraduationCap,
-  ChevronRight, FileText, PenSquare
+  ChevronRight, FileText, PenSquare, Award, Lightbulb, Mic, AlertCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -17,7 +17,12 @@ const NAV_ITEMS = [
   { href: '/teacher/roadmap', icon: Map, label: 'Lộ trình' },
   { href: '/teacher/lessons', icon: BookOpen, label: 'Giáo án' },
   { href: '/teacher/sessions/new', icon: PenSquare, label: 'Ghi buổi học' },
-  { href: '/teacher/assignments', icon: BookMarked, label: 'Bài tập & Test' },
+  { href: '/teacher/assignments', icon: BookMarked, label: 'Bài tập' },
+  { href: '/teacher/mock-tests', icon: Award, label: 'Mock Test' },
+  { href: '/teacher/strategies', icon: Lightbulb, label: 'Strategies' },
+  { href: '/teacher/sample-essays', icon: FileText, label: 'Sample Essays' },
+  { href: '/teacher/speaking-cues', icon: Mic, label: 'Speaking Cues' },
+  { href: '/teacher/errors', icon: AlertCircle, label: 'Sổ tay lỗi sai' },
   { href: '/teacher/rubrics', icon: BarChart3, label: 'Đánh giá tháng' },
   { href: '/teacher/progress', icon: ClipboardList, label: 'Tiến độ' },
   { href: '/teacher/reports', icon: FileText, label: 'Báo cáo' },
