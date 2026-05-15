@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { scheduleReview, legacyRatingToFsrs } from '@/lib/srs'
+import { awardXP, XP_RULES } from '@/lib/gamification'
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -63,34 +65,36 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json()
   const { cardId, rating } = body // rating: 0=Again, 1=Hard, 2=Good, 3=Easy
 
-  // SM-2 spaced repetition algorithm
   const card = await db.vocabCard.findUnique({ where: { id: cardId } })
   if (!card) return NextResponse.json({ error: 'Card not found' }, { status: 404 })
 
-  let { interval, easeFactor, repetitions } = card
-
-  if (rating < 2) {
-    // Again / Hard — reset
-    repetitions = 0
-    interval = 1
-  } else {
-    if (repetitions === 0) interval = 1
-    else if (repetitions === 1) interval = 6
-    else interval = Math.round(interval * easeFactor)
-
-    repetitions += 1
-  }
-
-  // Adjust ease factor: EF' = EF + (0.1 - (3-rating)*(0.08 + (3-rating)*0.02))
-  easeFactor = Math.max(1.3, easeFactor + 0.1 - (3 - rating) * (0.08 + (3 - rating) * 0.02))
-
-  const dueDate = new Date()
-  dueDate.setDate(dueDate.getDate() + interval)
+  // FSRS-6 scheduling (with SM-2 mirror for legacy UI)
+  const fsrsRating = legacyRatingToFsrs(rating)
+  const next = scheduleReview(card, fsrsRating)
 
   const updated = await db.vocabCard.update({
     where: { id: cardId },
-    data: { interval, easeFactor, repetitions, dueDate, lastReviewedAt: new Date() },
+    data: {
+      interval: next.interval,
+      easeFactor: next.easeFactor,
+      repetitions: next.repetitions,
+      dueDate: next.dueDate,
+      lastReviewedAt: next.lastReviewedAt,
+      stability: next.stability,
+      difficulty: next.difficulty,
+      state: next.state,
+    },
   })
 
-  return NextResponse.json(updated)
+  // Award XP — only for students reviewing their own cards
+  let xp = null
+  if (session.user.role === 'STUDENT') {
+    const student = await db.student.findFirst({ where: { userId: session.user.id } })
+    if (student && card.studentId === student.id) {
+      const xpAmount = rating >= 3 ? XP_RULES.VOCAB_REVIEW_EASY : XP_RULES.VOCAB_REVIEW
+      xp = await awardXP(student.id, xpAmount, { vocabReviewed: 1, minutesStudied: 1 })
+    }
+  }
+
+  return NextResponse.json({ card: updated, xp })
 }
