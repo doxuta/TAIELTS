@@ -1,0 +1,23 @@
+# Next.js build artifacts
+teaching-web/.next/
+teaching-web/node_modules/
+
+# Environment files
+teaching-web/.env
+teaching-web/.env.local
+teaching-web/.env*.local
+
+# SQLite database (has seed script)
+teaching-web/prisma/dev.db
+teaching-web/prisma/*.db-journal
+
+# OS files
+.DS_Store
+**/.DS_Store
+
+# Test files
+.test_write
+
+# Python cache
+__pycache__/
+*.pyc
