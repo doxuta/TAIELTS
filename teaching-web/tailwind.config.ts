@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Meridian Design System
+        // TAIELTS Design System
         sidebar: {
           DEFAULT: '#080B1A',
           foreground: '#C7CDE8',
@@ -106,7 +106,7 @@ const config: Config = {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'meridian-hero': 'linear-gradient(135deg, #080B1A 0%, #0D1030 50%, #080B1A 100%)',
+        'taielts-hero': 'linear-gradient(135deg, #080B1A 0%, #0D1030 50%, #080B1A 100%)',
         'card-shimmer': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)',
         'brand-gradient': 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
         'amber-gradient': 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',

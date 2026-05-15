@@ -52,10 +52,10 @@ export default function LoginPage() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-glow">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display font-semibold text-xl text-white">Meridian</span>
+            <span className="font-display font-semibold text-xl text-white tracking-tight">TAIELTS</span>
           </Link>
           <h1 className="text-2xl font-display font-bold text-white mb-2">Đăng nhập</h1>
-          <p className="text-sm text-white/40">Hệ thống dạy IELTS 1-1</p>
+          <p className="text-sm text-white/40">Lộ trình IELTS cá nhân hoá</p>
         </div>
 
         {/* Form */}

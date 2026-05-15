@@ -25,10 +25,10 @@ async function main() {
   const studentPassword = await bcrypt.hash('huyentrang123', 12)
 
   const studentUser = await prisma.user.upsert({
-    where: { email: 'huyentrang@student.meridian' },
+    where: { email: 'huyentrang@taielts.local' },
     update: {},
     create: {
-      email: 'huyentrang@student.meridian',
+      email: 'huyentrang@taielts.local',
       name: 'Huyền Trang',
       password: studentPassword,
       role: 'STUDENT',
@@ -107,7 +107,7 @@ async function main() {
   console.log('\n🎉 Database seeded successfully!')
   console.log('\n📋 Tài khoản để đăng nhập:')
   console.log('  👨‍🏫 Giáo viên: xuantai.net@gmail.com / teacher123')
-  console.log('  🎓 Học viên:   huyentrang@student.meridian / huyentrang123')
+  console.log('  🎓 Học viên:   huyentrang@taielts.local / huyentrang123')
 }
 
 main()

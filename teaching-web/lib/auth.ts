@@ -59,7 +59,7 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  secret: process.env.NEXTAUTH_SECRET ?? 'meridian-ielts-secret-2026',
+  secret: process.env.NEXTAUTH_SECRET ?? 'taielts-ielts-secret-2026',
 }
 
 export default NextAuth(authOptions)

@@ -47,7 +47,7 @@ export function TeacherShell({ children, teacherName, teacherEmail }: TeacherShe
             <div className="w-5 h-5 rounded-md bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center">
               <GraduationCap className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm font-semibold text-ink">Meridian</span>
+            <span className="text-sm font-semibold text-ink tracking-tight">TAIELTS</span>
           </div>
         </div>
         {children}

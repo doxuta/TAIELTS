@@ -44,8 +44,8 @@ export function TeacherSidebar({ teacherName = 'Matthew', teacherEmail }: Sideba
             <GraduationCap className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
-            <p className="text-sm font-display font-semibold text-sidebar-accent-foreground leading-none">Meridian</p>
-            <p className="text-[10px] text-sidebar-foreground/40 leading-none mt-0.5">IELTS Platform</p>
+            <p className="text-sm font-display font-semibold text-sidebar-accent-foreground leading-none tracking-tight">TAIELTS</p>
+            <p className="text-[10px] text-sidebar-foreground/40 leading-none mt-0.5">Teacher Studio</p>
           </div>
         </Link>
       </div>

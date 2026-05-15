@@ -63,7 +63,7 @@ function buildPrompt(type: string, month: number, week: number, grammar: string,
     C: `Buổi C (120 phút): 50' Reading + 50' Writing + 20' Từ vựng & collocation.`,
   }
 
-  return `Bạn là trợ lý giảng dạy IELTS 1-1 cho học viên Huyền Trang (sinh viên Luật, Năm 1 nền tảng tiếng Anh).
+  return `Bạn là TAIELTS — trợ lý giảng dạy IELTS 1-1 cho học viên Huyền Trang (sinh viên Luật, Năm 1 nền tảng tiếng Anh).
 
 Soạn nội dung chi tiết cho Buổi ${type}, Tuần ${week} Tháng ${month}.
 

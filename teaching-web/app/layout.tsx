@@ -33,11 +33,11 @@ const almarai = Almarai({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Meridian — IELTS Teaching Platform',
-    template: '%s | Meridian IELTS',
+    default: 'TAIELTS — Lộ trình IELTS cá nhân hoá',
+    template: '%s | TAIELTS',
   },
-  description: 'Hệ thống quản lý dạy học IELTS 1-1 chuyên nghiệp. Theo dõi lộ trình, soạn giáo án, chấm bài và tạo báo cáo tiến độ học viên.',
-  keywords: ['IELTS', 'teaching', 'education', 'English learning', 'lộ trình IELTS'],
+  description: 'Nền tảng học IELTS 1-1 theo band: mock test, AI scoring, từ vựng FSRS, chiến lược 4 kỹ năng. Từ nền tảng đến band mục tiêu.',
+  keywords: ['TAIELTS', 'IELTS', 'IELTS preparation', 'mock test', 'AI scoring', 'Cambridge IELTS', 'lộ trình IELTS', 'band 7', 'band 8'],
 }
 
 export default function RootLayout({
