@@ -3,9 +3,11 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, BookOpen, CheckCircle2, FileText, Clock, Calendar } from 'lucide-react'
+import { ArrowLeft, BookOpen, CheckCircle2, FileText, Clock, Calendar, Library } from 'lucide-react'
 import { getSessionTypeLabel, getSessionTypeSummary, formatDate } from '@/lib/utils'
 import LessonActions from './LessonActions'
+import { CitationList, type CitationWithSource } from '@/components/sources/CitationList'
+import { CitationAttacher } from '@/components/sources/CitationAttacher'
 
 const SESSION_STYLES = {
   A: { pill: 'session-A', border: 'border-violet-200 bg-violet-50/50' },
@@ -21,6 +23,12 @@ export default async function LessonDetailPage({ params }: { params: { id: strin
   })
 
   if (!lesson) notFound()
+
+  const citations = (await db.citation.findMany({
+    where: { attachedToType: 'LESSON_PLAN', attachedToId: lesson.id },
+    include: { sourceRoute: { include: { source: true } } },
+    orderBy: { createdAt: 'asc' },
+  })) as unknown as CitationWithSource[]
 
   const type = lesson.sessionType as 'A' | 'B' | 'C'
   const style = SESSION_STYLES[type] ?? SESSION_STYLES.A
@@ -125,6 +133,24 @@ export default async function LessonDetailPage({ params }: { params: { id: strin
             </div>
           </div>
         )}
+
+        {/* Citations */}
+        <div className="card p-6 animate-fade-up stagger-2">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Library className="w-4 h-4 text-ink-tertiary" />
+              <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider">
+                Nguồn tham chiếu
+              </h2>
+            </div>
+            <CitationAttacher attachedToType="LESSON_PLAN" attachedToId={lesson.id} />
+          </div>
+          <CitationList
+            citations={citations}
+            viewerRole="TEACHER"
+            emptyMessage="Chưa gắn nguồn. Bấm Attach citation để chọn từ kho nguồn đã được duyệt."
+          />
+        </div>
 
         {/* Main content */}
         {lesson.mainContent && (

@@ -17,7 +17,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          String    @default("STUDENT") // TEACHER, STUDENT
+  role          String    @default("STUDENT") // ADMIN, TEACHER, STUDENT
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -29,6 +29,11 @@ model User {
 
   // Student relation
   studentProfile Student? @relation("StudentUser")
+
+  // Source governance relations
+  sourcesCreated   Source[]   @relation("SourceCreatedBy")
+  sourcesReviewed  Source[]   @relation("SourceReviewedBy")
+  auditLogs        AuditLog[] @relation("AuditActor")
 
   accounts Account[]
   sessions Session[]
@@ -534,11 +539,94 @@ model JournalEntry {
   month           Int
   quarter         Int       // 1-4
   entryType       String    // WEEKLY / MILESTONE / TEACHER_NOTE
-  
+
   content         String
   teacherNote     String?
   milestone       String?   // e.g. "Xong thì cơ bản", "Nói 2 phút"
-  
+
   createdAt       DateTime  @default(now())
   student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// Source Registry — trusted sources, routes, citations, audit
+// ============================================================
+
+model Source {
+  id            String   @id @default(cuid())
+  type          String   // WEB / BOOK / AUDIO / YOUTUBE / EXERCISE / DICTIONARY / PDF / PODCAST
+  title         String
+  provider      String?
+  author        String?
+  url           String?
+  description   String?
+
+  trustLevel    String   @default("C_COMMUNITY")    // A_OFFICIAL / B_TEACHER_APPROVED / C_COMMUNITY / D_BLOCKED
+  licenseStatus String   @default("UNKNOWN")        // LINK_ONLY / EMBED_ALLOWED / PUBLIC_DOMAIN / CREATIVE_COMMONS / LICENSED / PAID_REQUIRED / UNKNOWN
+  reviewStatus  String   @default("DRAFT")          // DRAFT / PENDING_REVIEW / APPROVED / DEPRECATED / BLOCKED
+
+  cefrLevel     String?  // A1..C2
+  targetBand    Float?
+  skills        String?  // CSV: LISTENING,READING,WRITING,SPEAKING,GRAMMAR,VOCABULARY,PRONUNCIATION
+  topics        String?  // CSV
+
+  lastVerifiedAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdById   String
+  reviewedById  String?
+
+  createdBy     User     @relation("SourceCreatedBy", fields: [createdById], references: [id])
+  reviewedBy    User?    @relation("SourceReviewedBy", fields: [reviewedById], references: [id])
+
+  routes        SourceRoute[]
+}
+
+model SourceRoute {
+  id                String   @id @default(cuid())
+  sourceId          String
+  routeType         String   // URL / PAGE / CHAPTER / UNIT / EXERCISE / TIMESTAMP / TRANSCRIPT_SEGMENT
+  locatorJson       String?  // JSON: page numbers, time ranges, exercise ids, etc.
+  displayLabel      String
+  teacherNote       String?
+  learnerInstruction String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  source            Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  citations         Citation[]
+}
+
+model Citation {
+  id              String   @id @default(cuid())
+  sourceRouteId   String
+  claim           String?
+  attachedToType  String   // LESSON_PLAN / ASSIGNMENT / AI_FEEDBACK / VOCAB_CARD / ERROR_ENTRY / LESSON_BLOCK
+  attachedToId    String
+  confidence      Float?
+  displayMode     String   @default("SOURCE_CARD") // INLINE / SOURCE_CARD / TEACHER_ONLY
+
+  createdAt       DateTime @default(now())
+
+  sourceRoute     SourceRoute @relation(fields: [sourceRouteId], references: [id], onDelete: Cascade)
+
+  @@index([attachedToType, attachedToId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String
+  action      String   // e.g. SOURCE_CREATE / SOURCE_REVIEW / SOURCE_BLOCK / CITATION_ATTACH
+  entityType  String   // e.g. SOURCE / SOURCE_ROUTE / CITATION
+  entityId    String
+  beforeJson  String?
+  afterJson   String?
+  createdAt   DateTime @default(now())
+
+  actor       User     @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId])
 }

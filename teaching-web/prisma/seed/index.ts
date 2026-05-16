@@ -22,6 +22,7 @@ import { seedSpeakingCues } from './speaking-cues'
 import { seedMockTest } from './mock-test'
 import { seedErrors } from './errors'
 import { seedLessonsProgress } from './lessons-progress'
+import { seedSources } from './sources'
 
 const db = new PrismaClient()
 
@@ -61,10 +62,15 @@ async function main() {
   await seedErrors(db, student.id)
   console.log('')
 
+  console.log('9️⃣  Sources (admin + sample trusted sources)')
+  const { admin } = await seedSources(db)
+  console.log(`   ✓ Admin: ${admin.email}\n`)
+
   console.log('🎉 Mega seed complete!\n')
   console.log('📋 Login credentials:')
   console.log('  👨‍🏫 Teacher: xuantai.net@gmail.com / teacher123')
   console.log('  🎓 Student: huyentrang@taielts.local / huyentrang123')
+  console.log('  🛡  Admin:   admin@taielts.local / admin123')
   console.log('')
   console.log('🚀 Run: npm run dev → http://localhost:3001/login')
 }
