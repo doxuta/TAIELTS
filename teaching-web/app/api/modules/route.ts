@@ -40,7 +40,12 @@ export async function GET(req: NextRequest) {
   })
 
   const visible = canBuild(role) ? modules : modules.filter((m) => isModuleVisibleToStudents(m.status))
-  return NextResponse.json(visible)
+  return NextResponse.json(
+    visible.map((m) => ({
+      ...m,
+      blockCount: m._count.blocks,
+    }))
+  )
 }
 
 export async function POST(req: NextRequest) {
