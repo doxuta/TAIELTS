@@ -8,9 +8,10 @@ interface TeacherShellProps {
   children: React.ReactNode
   teacherName?: string
   teacherEmail?: string
+  role?: string
 }
 
-export function TeacherShell({ children, teacherName, teacherEmail }: TeacherShellProps) {
+export function TeacherShell({ children, teacherName, teacherEmail, role }: TeacherShellProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -29,7 +30,7 @@ export function TeacherShell({ children, teacherName, teacherEmail }: TeacherShe
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <TeacherSidebar teacherName={teacherName} teacherEmail={teacherEmail} />
+        <TeacherSidebar teacherName={teacherName} teacherEmail={teacherEmail} role={role} />
       </div>
 
       {/* Main content */}

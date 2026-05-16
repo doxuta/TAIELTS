@@ -42,6 +42,10 @@ model User {
   // Module assignment relations
   modulesAssigned  ModuleAssignment[] @relation("ModuleAssignedBy")
 
+  // AI feedback relations
+  aiFeedbacks      AIFeedback[] @relation("AIFeedbackUser")
+  aiFeedbacksReviewed AIFeedback[] @relation("AIFeedbackReviewer")
+
   accounts Account[]
   sessions Session[]
 }
@@ -734,4 +738,42 @@ model ModuleBlockProgress {
 
   @@unique([assignmentId, blockId])
   @@index([assignmentId, status])
+}
+
+// ============================================================
+// AI feedback — citation-aware AI scoring records
+// ============================================================
+
+model AIFeedback {
+  id              String   @id @default(cuid())
+  kind            String   // WRITING_TASK1 / WRITING_TASK2 / SPEAKING_PART1 / SPEAKING_PART2 / SPEAKING_PART3
+  model           String   // e.g. "gemini-2.0-flash"
+  inputJson       String   // raw input (prompt, essay/transcript, options)
+  outputJson      String   // raw AI score output
+
+  overallBand     Float?
+  summaryFeedback String?
+
+  // Optional anchor — what the feedback is about
+  attachedToType  String?  // LESSON_BLOCK / ASSIGNMENT / MOCK_TEST_ATTEMPT / FREEFORM
+  attachedToId    String?
+
+  // Provenance
+  citationContextJson String?  // JSON array of citation IDs that were injected as approved context
+
+  userId          String   // user who triggered the scoring (student or teacher)
+  user            User     @relation("AIFeedbackUser", fields: [userId], references: [id])
+
+  // Teacher review
+  teacherStatus   String   @default("PENDING_REVIEW")  // PENDING_REVIEW / APPROVED / NEEDS_REWORK / OVERRIDDEN
+  teacherNotes    String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  reviewedBy      User?    @relation("AIFeedbackReviewer", fields: [reviewedById], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, kind])
+  @@index([attachedToType, attachedToId])
 }

@@ -7,7 +7,8 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, Users, Map, BookOpen, ClipboardList,
   BarChart3, BookMarked, Settings, LogOut, GraduationCap,
-  ChevronRight, FileText, PenSquare, Award, Lightbulb, Mic, AlertCircle
+  ChevronRight, FileText, PenSquare, Award, Lightbulb, Mic, AlertCircle,
+  Hammer, Library, Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +27,12 @@ const NAV_ITEMS = [
   { href: '/teacher/rubrics', icon: BarChart3, label: 'Đánh giá tháng' },
   { href: '/teacher/progress', icon: ClipboardList, label: 'Tiến độ' },
   { href: '/teacher/reports', icon: FileText, label: 'Báo cáo' },
+  { href: '/teacher/feedback', icon: Sparkles, label: 'AI feedback' },
+]
+
+const BUILDER_ITEMS = [
+  { href: '/builder/modules', icon: Hammer, label: 'Builder · Modules', adminOnly: false },
+  { href: '/admin/sources', icon: Library, label: 'Sources (admin)', adminOnly: true },
 ]
 
 const BOTTOM_ITEMS = [
@@ -35,10 +42,12 @@ const BOTTOM_ITEMS = [
 interface SidebarProps {
   teacherName?: string
   teacherEmail?: string
+  role?: string
 }
 
-export function TeacherSidebar({ teacherName = 'Matthew', teacherEmail }: SidebarProps) {
+export function TeacherSidebar({ teacherName = 'Matthew', teacherEmail, role }: SidebarProps) {
   const pathname = usePathname()
+  const isAdmin = role === 'ADMIN'
 
   return (
     <aside className="w-[220px] shrink-0 h-screen sticky top-0 bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden">
@@ -62,6 +71,24 @@ export function TeacherSidebar({ teacherName = 'Matthew', teacherEmail }: Sideba
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link key={item.href} href={item.href}
+              className={cn('sidebar-link', isActive && 'active')}
+            >
+              <item.icon className="icon" />
+              <span className="flex-1">{item.label}</span>
+              {isActive && <ChevronRight className="w-3 h-3 opacity-40" />}
+            </Link>
+          )
+        })}
+
+        <div className="divider my-3" style={{ borderColor: 'rgba(255,255,255,0.04)' }} />
+
+        <p className="text-[10px] uppercase tracking-widest text-sidebar-foreground/30 font-medium px-2 mb-2">Builder</p>
+        {BUILDER_ITEMS.filter((i) => !i.adminOnly || isAdmin).map((item) => {
+          const isActive = pathname.startsWith(item.href)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
               className={cn('sidebar-link', isActive && 'active')}
             >
               <item.icon className="icon" />

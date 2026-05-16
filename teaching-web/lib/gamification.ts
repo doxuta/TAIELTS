@@ -18,6 +18,7 @@ export const XP_RULES = {
   STRATEGY_READ: 20,
   ESSAY_READ: 15,
   SPEAKING_PRACTICE: 80,
+  BLOCK_COMPLETE: 30,
 } as const
 
 export const DAILY_GOAL = {

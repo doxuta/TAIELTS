@@ -6,7 +6,8 @@ import { TeacherShell } from '@/components/layout/TeacherShell'
 export default async function TeacherLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
 
-  if (!session || (session.user as any)?.role !== 'TEACHER') {
+  const role = (session?.user as { role?: string })?.role
+  if (!session || (role !== 'TEACHER' && role !== 'ADMIN')) {
     redirect('/login')
   }
 
@@ -14,6 +15,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
     <TeacherShell
       teacherName={(session.user?.name ?? 'Matthew').split(' ')[0]}
       teacherEmail={session.user?.email ?? ''}
+      role={role}
     >
       {children}
     </TeacherShell>

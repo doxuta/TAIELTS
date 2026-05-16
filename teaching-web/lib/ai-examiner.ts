@@ -5,8 +5,11 @@
  * Returns structured JSON via Gemini's responseMimeType="application/json".
  */
 import { WRITING_TASK1_DESCRIPTORS, WRITING_TASK2_DESCRIPTORS, SPEAKING_DESCRIPTORS } from '@/lib/descriptors'
+import type { CitationContext } from '@/lib/aiFeedback'
+import { renderCitationContextForPrompt } from '@/lib/aiFeedback'
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+export const GEMINI_MODEL = 'gemini-2.0-flash'
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 interface CriterionScore {
   band: number
@@ -21,6 +24,8 @@ export interface WritingScore {
   overallBand: number
   summaryFeedback: string
   improvementSuggestions: string[]
+  /** Citation IDs the AI claimed to use; validated server-side before display. */
+  citedCitationIds?: string[]
 }
 
 export interface SpeakingScore {
@@ -31,6 +36,7 @@ export interface SpeakingScore {
   overallBand: number
   summaryFeedback: string
   improvementSuggestions: string[]
+  citedCitationIds?: string[]
 }
 
 async function callGemini(prompt: string): Promise<any> {
@@ -68,8 +74,20 @@ function roundToHalf(n: number): number {
   return Math.round(n * 2) / 2
 }
 
-function buildWritingTask1Prompt(prompt: string, essay: string): string {
+function citationFooter(): string {
+  return [
+    '',
+    'CITATION FIELD:',
+    '- If you reference any approved source, add its id (from the AVAILABLE APPROVED SOURCES list) to "citedCitationIds".',
+    '- If you reference none, return "citedCitationIds": [].',
+    '- NEVER put any id that is not in the provided list.',
+  ].join('\n')
+}
+
+function buildWritingTask1Prompt(prompt: string, essay: string, context: CitationContext[]): string {
   return `You are an experienced IELTS examiner. Score the following Writing Task 1 (Academic) response using the official 4 criteria.
+
+${renderCitationContextForPrompt(context)}
 
 OFFICIAL BAND DESCRIPTORS (key bands):
 ${JSON.stringify({ 9: WRITING_TASK1_DESCRIPTORS[9], 7: WRITING_TASK1_DESCRIPTORS[7], 6: WRITING_TASK1_DESCRIPTORS[6], 5: WRITING_TASK1_DESCRIPTORS[5] }, null, 2)}
@@ -82,6 +100,7 @@ Criteria:
 
 For each criterion: assign a band 0-9 (use .5 increments), then justify in 2-3 sentences citing specific examples from the essay.
 Overall band = average of the four criteria, rounded to nearest 0.5.
+${citationFooter()}
 
 PROMPT:
 ${prompt}
@@ -97,12 +116,15 @@ Return JSON with this exact shape:
   "grammar":      { "band": 6.5, "justification": "..." },
   "overallBand": 7.0,
   "summaryFeedback": "Concise 2-3 sentence overall assessment in English.",
-  "improvementSuggestions": ["3 specific actionable bullet points to improve next time"]
+  "improvementSuggestions": ["3 specific actionable bullet points to improve next time"],
+  "citedCitationIds": []
 }`
 }
 
-function buildWritingTask2Prompt(prompt: string, essay: string): string {
+function buildWritingTask2Prompt(prompt: string, essay: string, context: CitationContext[]): string {
   return `You are an experienced IELTS examiner. Score the following Writing Task 2 essay using the official 4 criteria.
+
+${renderCitationContextForPrompt(context)}
 
 OFFICIAL BAND DESCRIPTORS (key bands):
 ${JSON.stringify({ 9: WRITING_TASK2_DESCRIPTORS[9], 7: WRITING_TASK2_DESCRIPTORS[7], 6: WRITING_TASK2_DESCRIPTORS[6], 5: WRITING_TASK2_DESCRIPTORS[5] }, null, 2)}
@@ -115,6 +137,7 @@ Criteria:
 
 For each criterion: assign a band 0-9 (use .5 increments), then justify in 2-3 sentences citing specific examples.
 Overall band = average of the four criteria, rounded to nearest 0.5.
+${citationFooter()}
 
 PROMPT:
 ${prompt}
@@ -130,12 +153,15 @@ Return JSON with this exact shape:
   "grammar":      { "band": 6.5, "justification": "..." },
   "overallBand": 7.0,
   "summaryFeedback": "Concise 2-3 sentence overall assessment in English.",
-  "improvementSuggestions": ["3 specific actionable bullet points to improve next time"]
+  "improvementSuggestions": ["3 specific actionable bullet points to improve next time"],
+  "citedCitationIds": []
 }`
 }
 
-function buildSpeakingPrompt(part: number, transcript: string): string {
+function buildSpeakingPrompt(part: number, transcript: string, context: CitationContext[]): string {
   return `You are an experienced IELTS Speaking examiner. Score this Speaking Part ${part} transcript using the official 4 criteria.
+
+${renderCitationContextForPrompt(context)}
 
 OFFICIAL BAND DESCRIPTORS (key bands):
 ${JSON.stringify({ 9: SPEAKING_DESCRIPTORS[9], 7: SPEAKING_DESCRIPTORS[7], 6: SPEAKING_DESCRIPTORS[6], 5: SPEAKING_DESCRIPTORS[5] }, null, 2)}
@@ -150,6 +176,7 @@ Note: Transcript only (no audio). For pronunciation, judge based on word choices
 
 For each criterion: band 0-9 (.5 increments), 2-3 sentence justification.
 Overall band = average rounded to nearest 0.5.
+${citationFooter()}
 
 TRANSCRIPT (${transcript.split(/\s+/).length} words):
 ${transcript}
@@ -162,24 +189,50 @@ Return JSON with this exact shape:
   "pronunciation": { "band": 6.5, "justification": "..." },
   "overallBand": 7.0,
   "summaryFeedback": "Concise 2-3 sentence overall assessment in English.",
-  "improvementSuggestions": ["3 specific actionable bullet points"]
+  "improvementSuggestions": ["3 specific actionable bullet points"],
+  "citedCitationIds": []
 }`
 }
 
-export async function scoreWritingTask1(prompt: string, essay: string): Promise<WritingScore> {
-  const parsed = await callGemini(buildWritingTask1Prompt(prompt, essay))
+/**
+ * Filter `citedCitationIds` to only IDs that actually exist in the provided
+ * approved context. Strips anything the AI may have invented.
+ */
+function sanitizeCitedIds(raw: unknown, context: CitationContext[]): string[] {
+  if (!Array.isArray(raw)) return []
+  const allowed = new Set(context.map((c) => c.id))
+  return raw.filter((x): x is string => typeof x === 'string' && allowed.has(x))
+}
+
+export async function scoreWritingTask1(
+  prompt: string,
+  essay: string,
+  context: CitationContext[] = []
+): Promise<WritingScore> {
+  const parsed = await callGemini(buildWritingTask1Prompt(prompt, essay, context))
   parsed.overallBand = roundToHalf(parsed.overallBand)
+  parsed.citedCitationIds = sanitizeCitedIds(parsed.citedCitationIds, context)
   return parsed
 }
 
-export async function scoreWritingTask2(prompt: string, essay: string): Promise<WritingScore> {
-  const parsed = await callGemini(buildWritingTask2Prompt(prompt, essay))
+export async function scoreWritingTask2(
+  prompt: string,
+  essay: string,
+  context: CitationContext[] = []
+): Promise<WritingScore> {
+  const parsed = await callGemini(buildWritingTask2Prompt(prompt, essay, context))
   parsed.overallBand = roundToHalf(parsed.overallBand)
+  parsed.citedCitationIds = sanitizeCitedIds(parsed.citedCitationIds, context)
   return parsed
 }
 
-export async function scoreSpeakingTranscript(part: 1 | 2 | 3, transcript: string): Promise<SpeakingScore> {
-  const parsed = await callGemini(buildSpeakingPrompt(part, transcript))
+export async function scoreSpeakingTranscript(
+  part: 1 | 2 | 3,
+  transcript: string,
+  context: CitationContext[] = []
+): Promise<SpeakingScore> {
+  const parsed = await callGemini(buildSpeakingPrompt(part, transcript, context))
   parsed.overallBand = roundToHalf(parsed.overallBand)
+  parsed.citedCitationIds = sanitizeCitedIds(parsed.citedCitationIds, context)
   return parsed
 }

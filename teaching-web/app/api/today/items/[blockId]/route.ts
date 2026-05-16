@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { awardXP, XP_RULES } from '@/lib/gamification'
 
 const ALLOWED_STATUSES = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED'] as const
 
@@ -39,6 +40,10 @@ export async function PATCH(
     return NextResponse.json({ error: 'No assignment for this block' }, { status: 403 })
   }
 
+  const prev = await db.moduleBlockProgress.findUnique({
+    where: { assignmentId_blockId: { assignmentId: assignment.id, blockId: block.id } },
+  })
+
   const progress = await db.moduleBlockProgress.upsert({
     where: { assignmentId_blockId: { assignmentId: assignment.id, blockId: block.id } },
     create: {
@@ -55,6 +60,14 @@ export async function PATCH(
     },
   })
 
+  // Award XP only on the FIRST time a block transitions to COMPLETED.
+  let xpResult: Awaited<ReturnType<typeof awardXP>> | null = null
+  if (status === 'COMPLETED' && prev?.status !== 'COMPLETED') {
+    xpResult = await awardXP(student.id, XP_RULES.BLOCK_COMPLETE, {
+      minutesStudied: block.estimatedMinutes ?? minutesSpent ?? 0,
+    })
+  }
+
   // If every block in the module is COMPLETED, mark the assignment COMPLETED.
   const totalBlocks = await db.lessonBlock.count({ where: { moduleId: block.moduleId } })
   const completedBlocks = await db.moduleBlockProgress.count({
@@ -67,5 +80,5 @@ export async function PATCH(
     })
   }
 
-  return NextResponse.json(progress)
+  return NextResponse.json({ progress, xp: xpResult })
 }
