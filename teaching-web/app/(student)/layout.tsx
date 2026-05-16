@@ -20,6 +20,7 @@ export default async function StudentPortalLayout({ children }: { children: Reac
     { href: '/student/speaking', label: 'Luyện Speaking' },
     { href: '/student/lessons', label: 'Buổi học' },
     { href: '/student/assignments', label: 'Bài tập' },
+    { href: '/student/feedback', label: 'AI feedback' },
     { href: '/student/errors', label: 'Sổ tay lỗi sai' },
     { href: '/student/journal', label: 'Nhật ký' },
   ]

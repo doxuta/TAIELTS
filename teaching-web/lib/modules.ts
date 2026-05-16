@@ -14,7 +14,7 @@ export const MODULE_SKILLS = [
 export type ModuleSkill = (typeof MODULE_SKILLS)[number]
 
 /** Block types shipped in v1. Other types declared but disabled at the UI level. */
-export const BLOCK_TYPES_V1 = ['GRAMMAR_NOTE', 'READING'] as const
+export const BLOCK_TYPES_V1 = ['GRAMMAR_NOTE', 'READING', 'WRITING_PROMPT', 'SPEAKING_PROMPT'] as const
 
 export const BLOCK_TYPES_ALL = [
   'GRAMMAR_NOTE',
@@ -72,8 +72,21 @@ export function isModuleVisibleToStudents(status: string): boolean {
 }
 
 export type BlockContent = {
+  /** Primary body text for READING / GRAMMAR_NOTE and prompt text for WRITING_PROMPT / SPEAKING_PROMPT. */
   body?: string
-  // future: audioUrl, videoUrl, questions, prompt, etc.
+  /** WRITING_PROMPT — IELTS task variant. */
+  writingTaskType?: 'TASK_1' | 'TASK_2'
+  /** SPEAKING_PROMPT — IELTS speaking part. */
+  speakingPart?: 1 | 2 | 3
+  /** Minimum word/transcript length suggested to the learner (display-only). */
+  minWords?: number
+}
+
+/** Block types that accept a learner submission scored by AI. */
+export const SUBMITTABLE_BLOCK_TYPES = ['WRITING_PROMPT', 'SPEAKING_PROMPT'] as const
+
+export function isSubmittableBlock(type: string): type is 'WRITING_PROMPT' | 'SPEAKING_PROMPT' {
+  return (SUBMITTABLE_BLOCK_TYPES as readonly string[]).includes(type)
 }
 
 export function parseBlockContent(json: string | null | undefined): BlockContent {

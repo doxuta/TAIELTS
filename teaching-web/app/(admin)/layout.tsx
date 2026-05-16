@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { Shield, BookMarked, ClipboardList, LogOut, LayoutDashboard, Users, Layers } from 'lucide-react'
+import { Shield, BookMarked, ClipboardList, LogOut, LayoutDashboard, Users, Layers, GraduationCap, Sparkles } from 'lucide-react'
 import { authOptions } from '@/lib/auth'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -57,6 +57,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             <ClipboardList className="h-4 w-4" />
             Audit log
+          </Link>
+
+          <div className="my-2 border-t border-surface-border" />
+          <p className="text-[10px] uppercase tracking-widest text-ink-tertiary font-medium px-3 mb-1">
+            Switch view
+          </p>
+          <Link
+            href="/teacher/dashboard"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-primary hover:bg-surface-tertiary"
+          >
+            <GraduationCap className="h-4 w-4" />
+            Teacher Studio
+          </Link>
+          <Link
+            href="/teacher/feedback"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-primary hover:bg-surface-tertiary"
+          >
+            <Sparkles className="h-4 w-4" />
+            AI feedback inbox
           </Link>
         </nav>
         <div className="border-t border-surface-border px-4 py-3 text-xs text-ink-tertiary">

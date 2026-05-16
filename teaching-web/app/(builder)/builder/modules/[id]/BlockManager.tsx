@@ -44,6 +44,8 @@ export function BlockManager({
   const [addType, setAddType] = useState<string>('GRAMMAR_NOTE')
   const [addTitle, setAddTitle] = useState('')
   const [addBody, setAddBody] = useState('')
+  const [addWritingTask, setAddWritingTask] = useState<'TASK_1' | 'TASK_2'>('TASK_2')
+  const [addSpeakingPart, setAddSpeakingPart] = useState<1 | 2 | 3>(2)
   const [addError, setAddError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -54,14 +56,14 @@ export function BlockManager({
       return
     }
     setPending(true)
+    const content: Record<string, unknown> = { body: addBody }
+    if (addType === 'WRITING_PROMPT') content.writingTaskType = addWritingTask
+    if (addType === 'SPEAKING_PROMPT') content.speakingPart = addSpeakingPart
+
     const res = await fetch(`/api/modules/${moduleId}/blocks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: addType,
-        title: addTitle.trim(),
-        content: { body: addBody },
-      }),
+      body: JSON.stringify({ type: addType, title: addTitle.trim(), content }),
     })
     setPending(false)
     if (!res.ok) {
@@ -127,14 +129,47 @@ export function BlockManager({
               />
             </label>
           </div>
+          {addType === 'WRITING_PROMPT' && (
+            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
+              Writing task
+              <select
+                value={addWritingTask}
+                onChange={(e) => setAddWritingTask(e.target.value as 'TASK_1' | 'TASK_2')}
+                className={INPUT}
+              >
+                <option value="TASK_2">TASK 2 (essay)</option>
+                <option value="TASK_1">TASK 1 (academic / general)</option>
+              </select>
+            </label>
+          )}
+          {addType === 'SPEAKING_PROMPT' && (
+            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
+              Speaking part
+              <select
+                value={addSpeakingPart}
+                onChange={(e) => setAddSpeakingPart(Number(e.target.value) as 1 | 2 | 3)}
+                className={INPUT}
+              >
+                <option value={1}>Part 1 — Interview</option>
+                <option value={2}>Part 2 — Long turn (cue card)</option>
+                <option value={3}>Part 3 — Discussion</option>
+              </select>
+            </label>
+          )}
           <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-            Body (markdown ok)
+            {addType === 'WRITING_PROMPT' || addType === 'SPEAKING_PROMPT' ? 'Prompt' : 'Body (markdown ok)'}
             <textarea
               value={addBody}
               onChange={(e) => setAddBody(e.target.value)}
               rows={5}
               className={INPUT}
-              placeholder="Viết nội dung block..."
+              placeholder={
+                addType === 'WRITING_PROMPT'
+                  ? 'Some people think... Discuss both views and give your opinion.'
+                  : addType === 'SPEAKING_PROMPT'
+                    ? 'Describe a place you visited recently. You should say...'
+                    : 'Viết nội dung block...'
+              }
             />
           </label>
           {addError && <p className="text-xs text-red-600">{addError}</p>}
