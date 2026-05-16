@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import { Shield, BookMarked, ClipboardList, LogOut } from 'lucide-react'
+import { Shield, BookMarked, ClipboardList, LogOut, LayoutDashboard, Users, Layers } from 'lucide-react'
 import { authOptions } from '@/lib/auth'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -24,11 +24,32 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <nav className="flex-1 px-2 py-3 space-y-1">
           <Link
+            href="/admin"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-primary hover:bg-surface-tertiary"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Overview
+          </Link>
+          <Link
+            href="/admin/users"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-primary hover:bg-surface-tertiary"
+          >
+            <Users className="h-4 w-4" />
+            Users
+          </Link>
+          <Link
             href="/admin/sources"
             className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-primary hover:bg-surface-tertiary"
           >
             <BookMarked className="h-4 w-4" />
             Sources
+          </Link>
+          <Link
+            href="/builder/modules"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-primary hover:bg-surface-tertiary"
+          >
+            <Layers className="h-4 w-4" />
+            Modules
           </Link>
           <Link
             href="/admin/audit"
