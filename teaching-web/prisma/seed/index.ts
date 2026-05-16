@@ -23,6 +23,7 @@ import { seedMockTest } from './mock-test'
 import { seedErrors } from './errors'
 import { seedLessonsProgress } from './lessons-progress'
 import { seedSources } from './sources'
+import { seedDemoModules } from './modules'
 
 const db = new PrismaClient()
 
@@ -65,6 +66,12 @@ async function main() {
   console.log('9️⃣  Sources (admin + sample trusted sources)')
   const { admin } = await seedSources(db)
   console.log(`   ✓ Admin: ${admin.email}\n`)
+
+  console.log('🔟  Demo modules (published) + assignment to seeded student')
+  const modulesResult = await seedDemoModules(db, admin.id, student.id)
+  console.log(
+    `   ✓ ${modulesResult.created} created, ${modulesResult.updated} updated of ${modulesResult.total} total\n`
+  )
 
   console.log('🎉 Mega seed complete!\n')
   console.log('📋 Login credentials:')

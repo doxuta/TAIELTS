@@ -78,6 +78,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         </button>
       </form>
 
+      {users.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-surface-border bg-surface-primary p-10 text-center">
+          <p className="text-ink-secondary">Không có user nào khớp bộ lọc.</p>
+        </div>
+      ) : (
       <div className="overflow-x-auto rounded-xl border border-surface-border bg-surface-primary">
         <table className="w-full text-sm">
           <thead className="bg-surface-secondary text-left text-xs uppercase text-ink-tertiary">
@@ -113,6 +118,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   )
 }

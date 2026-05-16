@@ -92,9 +92,23 @@ export function TodayPlan() {
 
   if (loading) {
     return (
-      <div className="card p-6 flex items-center gap-2 text-sm text-ink-tertiary">
-        <Loader2 className="w-4 h-4 animate-spin" /> Đang nạp Today Plan...
-      </div>
+      <ol className="space-y-3" aria-busy="true">
+        {[0, 1, 2].map((i) => (
+          <li key={i} className="card p-4">
+            <div className="flex items-start gap-3 animate-pulse">
+              <div className="mt-0.5 h-5 w-5 rounded-full bg-surface-tertiary" />
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-20 rounded-full bg-surface-tertiary" />
+                  <div className="h-4 w-2/3 rounded bg-surface-tertiary" />
+                </div>
+                <div className="h-3 w-1/3 rounded bg-surface-tertiary" />
+                <div className="h-14 rounded bg-surface-secondary" />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
     )
   }
 
