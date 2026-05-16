@@ -13,6 +13,13 @@ export default withAuth(
       return NextResponse.redirect(url)
     }
 
+    if (pathname.startsWith('/builder') && role !== 'ADMIN' && role !== 'TEACHER') {
+      const url = req.nextUrl.clone()
+      url.pathname = '/dashboard'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+
     return NextResponse.next()
   },
   {
@@ -23,5 +30,11 @@ export default withAuth(
 )
 
 export const config = {
-  matcher: ['/teacher/:path*', '/student/:path*', '/dashboard', '/admin/:path*'],
+  matcher: [
+    '/teacher/:path*',
+    '/student/:path*',
+    '/dashboard',
+    '/admin/:path*',
+    '/builder/:path*',
+  ],
 }

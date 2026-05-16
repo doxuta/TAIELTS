@@ -35,6 +35,10 @@ model User {
   sourcesReviewed  Source[]   @relation("SourceReviewedBy")
   auditLogs        AuditLog[] @relation("AuditActor")
 
+  // Module builder relations
+  modulesCreated   LearningModule[] @relation("ModuleCreatedBy")
+  modulesPublished LearningModule[] @relation("ModulePublishedBy")
+
   accounts Account[]
   sessions Session[]
 }
@@ -618,8 +622,8 @@ model Citation {
 model AuditLog {
   id          String   @id @default(cuid())
   actorId     String
-  action      String   // e.g. SOURCE_CREATE / SOURCE_REVIEW / SOURCE_BLOCK / CITATION_ATTACH
-  entityType  String   // e.g. SOURCE / SOURCE_ROUTE / CITATION
+  action      String   // e.g. SOURCE_CREATE / SOURCE_REVIEW / SOURCE_BLOCK / CITATION_ATTACH / MODULE_PUBLISH
+  entityType  String   // e.g. SOURCE / SOURCE_ROUTE / CITATION / MODULE / BLOCK
   entityId    String
   beforeJson  String?
   afterJson   String?
@@ -629,4 +633,52 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@index([actorId])
+}
+
+// ============================================================
+// Module Builder — learning modules and lesson blocks
+// ============================================================
+
+model LearningModule {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  summary       String?
+  skill         String?  // LISTENING / READING / WRITING / SPEAKING / GRAMMAR / VOCABULARY / PRONUNCIATION / MIXED
+  cefrLevel     String?  // A1..C2
+  targetBand    Float?
+  week          Int?
+  estimatedMinutes Int?
+
+  status        String   @default("DRAFT")  // DRAFT / IN_REVIEW / PUBLISHED / ARCHIVED
+  version       Int      @default(1)
+
+  createdById   String
+  publishedById String?
+  publishedAt   DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdBy     User     @relation("ModuleCreatedBy", fields: [createdById], references: [id])
+  publishedBy   User?    @relation("ModulePublishedBy", fields: [publishedById], references: [id])
+
+  blocks        LessonBlock[]
+}
+
+model LessonBlock {
+  id              String   @id @default(cuid())
+  moduleId        String
+  type            String   // GRAMMAR_NOTE / READING / AUDIO / VIDEO / QUIZ / WRITING_PROMPT / SPEAKING_PROMPT / FLASHCARD_SET
+  title           String
+  contentJson     String?  // JSON: { body, ... }
+  order           Int      @default(0)
+  estimatedMinutes Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  module          LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId, order])
 }

@@ -1,0 +1,28 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { db } from '@/lib/db'
+import { writeAudit } from '@/lib/audit'
+
+export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Only ADMIN can archive' }, { status: 403 })
+  }
+  const before = await db.learningModule.findUnique({ where: { id: params.id } })
+  if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const updated = await db.learningModule.update({
+    where: { id: params.id },
+    data: { status: 'ARCHIVED' },
+  })
+  await writeAudit({
+    actorId: session.user.id,
+    action: 'MODULE_ARCHIVE',
+    entityType: 'MODULE',
+    entityId: updated.id,
+    before: { status: before.status },
+    after: { status: updated.status },
+  })
+  return NextResponse.json(updated)
+}

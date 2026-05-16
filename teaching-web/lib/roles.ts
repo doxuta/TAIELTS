@@ -22,6 +22,16 @@ export function isAdmin(session: Session | null): boolean {
   return hasRole(session, ROLES.ADMIN)
 }
 
+/** Roles allowed to use the Module Builder. */
+export function canBuild(session: Session | null): boolean {
+  return hasRole(session, ROLES.ADMIN, ROLES.TEACHER)
+}
+
+/** Only ADMIN can publish a module to students. */
+export function canPublish(session: Session | null): boolean {
+  return hasRole(session, ROLES.ADMIN)
+}
+
 export async function getSessionOrNull(): Promise<Session | null> {
   return getServerSession(authOptions)
 }

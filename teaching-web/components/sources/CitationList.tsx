@@ -6,6 +6,8 @@ export type CitationWithSource = {
   id: string
   claim: string | null
   displayMode: string
+  attachedToType?: string
+  attachedToId?: string
   sourceRoute: {
     id: string
     routeType: string
