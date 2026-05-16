@@ -40,6 +40,12 @@ export interface SpeakingScore {
 }
 
 async function callGemini(prompt: string): Promise<any> {
+  // Mock mode for local dev / CI / quota-exhausted scenarios.
+  // Enabled by setting AI_MOCK=1 in .env. Never enable in production.
+  if (process.env.AI_MOCK === '1') {
+    return buildMockResponse(prompt)
+  }
+
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey || apiKey === '') {
     throw new Error('GEMINI_API_KEY not configured')
@@ -68,6 +74,52 @@ async function callGemini(prompt: string): Promise<any> {
   if (!text) throw new Error('Empty Gemini response')
 
   return JSON.parse(text)
+}
+
+/**
+ * Deterministic fixture used when AI_MOCK=1. Returns rubric-shaped JSON
+ * matching either Writing or Speaking based on the prompt header. Picks
+ * the citation IDs declared in the AVAILABLE APPROVED SOURCES section so
+ * the sanitizer downstream still trims to the approved list.
+ */
+function buildMockResponse(prompt: string) {
+  const isSpeaking = prompt.includes('Speaking Part')
+  const idMatches = Array.from(prompt.matchAll(/id=([a-z0-9]+)/g)).map((m) => m[1])
+  const citedCitationIds = idMatches.slice(0, 2)
+
+  const summary =
+    '[MOCK] AI scoring is in mock mode (AI_MOCK=1). The answer shows reasonable control of the target structure but would benefit from richer linking devices and more precise word choice.'
+  const tips = [
+    '[MOCK] Vary sentence openings; avoid starting three sentences in a row with the same subject.',
+    '[MOCK] Replace 1–2 generic verbs (do, make) with more precise alternatives.',
+    '[MOCK] Add one concrete example to support the main claim.',
+  ]
+
+  if (isSpeaking) {
+    return {
+      fluency: { band: 6.0, justification: '[MOCK] Generally smooth with occasional hesitation.' },
+      lexical: { band: 6.0, justification: '[MOCK] Adequate range; some repetition.' },
+      grammar: { band: 6.5, justification: '[MOCK] Mostly accurate; some complex forms attempted.' },
+      pronunciation: {
+        band: 6.0,
+        justification: '[MOCK] Inferred from word choice — vowel quality could be sharper.',
+      },
+      overallBand: 6.0,
+      summaryFeedback: summary,
+      improvementSuggestions: tips,
+      citedCitationIds,
+    }
+  }
+  return {
+    taskResponse: { band: 6.5, justification: '[MOCK] Position is clear and addresses both views.' },
+    coherence: { band: 6.5, justification: '[MOCK] Paragraphs are logical; linkers used appropriately.' },
+    lexical: { band: 6.0, justification: '[MOCK] Adequate range; one or two collocation slips.' },
+    grammar: { band: 6.5, justification: '[MOCK] Mix of simple and complex; few errors.' },
+    overallBand: 6.5,
+    summaryFeedback: summary,
+    improvementSuggestions: tips,
+    citedCitationIds,
+  }
 }
 
 function roundToHalf(n: number): number {

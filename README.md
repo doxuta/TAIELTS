@@ -21,6 +21,13 @@ npm run db:seed        # seed demo users + sources + modules
 npm run dev            # http://localhost:3001
 ```
 
+### AI mock mode
+
+Don't have a Gemini key, or hit the free-tier quota? Set `AI_MOCK=1` in `.env`.
+The writing/speaking scorers will return deterministic `[MOCK]` rubric fixtures
+while still exercising the full citation-context + server-side ID sanitization
+path. Useful for UI/CI demos. Never enable this in production.
+
 ## Seed credentials
 
 | Role | Email | Password | Lands on |

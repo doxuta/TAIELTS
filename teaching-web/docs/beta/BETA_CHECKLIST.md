@@ -65,6 +65,7 @@ Target: 30–50 học viên + 3–5 giáo viên + 1 admin trên một bản beta
 ## 5. Operations
 
 - [ ] `.env` set in deployment: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `GEMINI_API_KEY`.
+- [ ] `AI_MOCK` is **unset** in production (only used for local dev / CI).
 - [ ] Migrate from SQLite → Postgres before public beta (see `prisma/schema.prisma`).
 - [ ] Backup strategy: daily DB dump.
 - [ ] Audit log retention policy (currently unlimited rows).
