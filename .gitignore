@@ -21,3 +21,28 @@ teaching-web/prisma/*.db-journal
 # Python cache
 __pycache__/
 *.pyc
+
+# Private teaching materials — NEVER push to GitHub
+01 - Lộ Trình & Kế Hoạch/
+02 - Theo Dõi Tiến Độ/
+03 - Bài Tập Theo Tuần/
+04 - Kiểm Tra & Đánh Giá/
+05 - Từ Vựng & Ngữ Pháp/
+06 - Tài Liệu Tham Khảo/
+📖*
+📦*
+IELTS */
+
+# Unrelated drafts / scratch
+dashboard/
+idea.html
+idea.pdf
+
+# Local agent/editor state
+.agent/
+.claude/
+.gemini/
+.cursor/
+
+# Local-only AI memory
+CLAUDE.local.md
