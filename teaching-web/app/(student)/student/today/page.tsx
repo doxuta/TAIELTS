@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Flame, Zap, Target, BookOpen, Mic, Award, Loader2 } from 'lucide-react'
+import { Flame, Zap, Target, BookOpen, Mic, Award, Loader2, Sparkles } from 'lucide-react'
 import { StreakBadge } from '@/components/ui/StreakBadge'
 import { XPBar } from '@/components/ui/XPBar'
+import { TodayPlan } from '@/components/student/TodayPlan'
 
 const DAILY_TASKS = [
   { id: 'vocab', label: 'Ôn 10 thẻ từ vựng', icon: BookOpen, href: '/student/vocab', xp: 50 },
@@ -88,8 +89,16 @@ export default function TodayChallengePage() {
         )}
       </div>
 
+      {/* Today Plan from assigned modules */}
+      <div className="mb-6 animate-fade-up stagger-3">
+        <h2 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2 inline-flex items-center gap-1">
+          <Sparkles className="w-3 h-3" /> Lộ trình hôm nay
+        </h2>
+        <TodayPlan />
+      </div>
+
       {/* Daily tasks */}
-      <div className="space-y-2 animate-fade-up stagger-3">
+      <div className="space-y-2 animate-fade-up stagger-4">
         <h2 className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-2">Hoạt động đề xuất</h2>
         {DAILY_TASKS.map(task => {
           const Icon = task.icon

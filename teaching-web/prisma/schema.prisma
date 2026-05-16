@@ -39,6 +39,9 @@ model User {
   modulesCreated   LearningModule[] @relation("ModuleCreatedBy")
   modulesPublished LearningModule[] @relation("ModulePublishedBy")
 
+  // Module assignment relations
+  modulesAssigned  ModuleAssignment[] @relation("ModuleAssignedBy")
+
   accounts Account[]
   sessions Session[]
 }
@@ -119,6 +122,7 @@ model Student {
   streakRecord    StreakRecord?
   dailyActivities DailyActivity[]
   errorEntries    ErrorEntry[]
+  moduleAssignments ModuleAssignment[]
 }
 
 model LessonPlan {
@@ -664,6 +668,7 @@ model LearningModule {
   publishedBy   User?    @relation("ModulePublishedBy", fields: [publishedById], references: [id])
 
   blocks        LessonBlock[]
+  assignments   ModuleAssignment[]
 }
 
 model LessonBlock {
@@ -679,6 +684,54 @@ model LessonBlock {
   updatedAt       DateTime @updatedAt
 
   module          LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  blockProgress   ModuleBlockProgress[]
 
   @@index([moduleId, order])
+}
+
+// ============================================================
+// Module Assignment + Today Plan progress
+// ============================================================
+
+model ModuleAssignment {
+  id            String   @id @default(cuid())
+  studentId     String
+  moduleId      String
+  assignedById  String
+
+  status        String   @default("ACTIVE")  // ACTIVE / PAUSED / COMPLETED / CANCELLED
+  startDate     DateTime @default(now())
+  dueDate       DateTime?
+  teacherNote   String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  student       Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  module        LearningModule  @relation(fields: [moduleId], references: [id])
+  assignedBy    User            @relation("ModuleAssignedBy", fields: [assignedById], references: [id])
+
+  blockProgress ModuleBlockProgress[]
+
+  @@unique([studentId, moduleId])
+  @@index([studentId, status])
+}
+
+model ModuleBlockProgress {
+  id              String   @id @default(cuid())
+  assignmentId    String
+  blockId         String
+
+  status          String   @default("PLANNED")  // PLANNED / IN_PROGRESS / COMPLETED / SKIPPED
+  completedAt     DateTime?
+  minutesSpent    Int?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  assignment      ModuleAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  block           LessonBlock      @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, blockId])
+  @@index([assignmentId, status])
 }
