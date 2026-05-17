@@ -21,10 +21,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { AdminCharts, type AdminChartsData } from './AdminCharts'
 
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+  fourteenDaysAgo.setHours(0, 0, 0, 0)
+
   const [
     usersByRole,
     sourcesByStatus,
@@ -32,6 +36,8 @@ async function getStats() {
     citationCount,
     feedbackByStatus,
     recentAudit,
+    recentUsers,
+    recentFeedback,
   ] = await Promise.all([
     db.user.groupBy({ by: ['role'], _count: { _all: true } }),
     db.source.groupBy({ by: ['reviewStatus'], _count: { _all: true } }),
@@ -43,12 +49,50 @@ async function getStats() {
       take: 8,
       include: { actor: { select: { name: true, email: true } } },
     }),
+    db.user.findMany({
+      where: { createdAt: { gte: fourteenDaysAgo } },
+      select: { createdAt: true },
+    }),
+    db.aIFeedback.findMany({
+      where: { createdAt: { gte: fourteenDaysAgo } },
+      select: { createdAt: true, teacherStatus: true },
+    }),
   ])
 
   const toMap = <K extends string>(
     arr: Array<{ _count: { _all: number } } & Record<K, string>>,
     key: K
   ) => Object.fromEntries(arr.map((r) => [r[key], r._count._all]))
+
+  // Build 14-day buckets
+  const days: string[] = []
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    d.setHours(0, 0, 0, 0)
+    days.push(d.toISOString().slice(0, 10))
+  }
+
+  const signupsByDay = days.map((date) => ({
+    date,
+    users: recentUsers.filter((u) => u.createdAt.toISOString().slice(0, 10) === date).length,
+  }))
+
+  const feedbackByDay = days.map((date) => {
+    const sameDay = recentFeedback.filter((f) => f.createdAt.toISOString().slice(0, 10) === date)
+    return {
+      date,
+      total: sameDay.length,
+      pending: sameDay.filter((f) => f.teacherStatus === 'PENDING_REVIEW').length,
+    }
+  })
+
+  const chartsData: AdminChartsData = {
+    sourcesByStatus: sourcesByStatus.map((s) => ({ name: s.reviewStatus, value: s._count._all })),
+    modulesByStatus: modulesByStatus.map((m) => ({ name: m.status, value: m._count._all })),
+    signupsByDay,
+    feedbackByDay,
+  }
 
   return {
     users: toMap(usersByRole, 'role'),
@@ -57,6 +101,7 @@ async function getStats() {
     citationCount,
     feedback: toMap(feedbackByStatus, 'teacherStatus'),
     recentAudit,
+    chartsData,
   }
 }
 
@@ -135,6 +180,8 @@ export default async function AdminDashboardPage() {
           warningWhen={feedbackPending > 0}
         />
       </section>
+
+      <AdminCharts data={stats.chartsData} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Activity */}

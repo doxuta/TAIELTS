@@ -9,6 +9,8 @@ import {
   Layers,
   GraduationCap,
   Sparkles,
+  Inbox,
+  Settings,
 } from 'lucide-react'
 import { AppShell, type AppShellUser } from './AppShell'
 
@@ -34,12 +36,14 @@ export function AdminShell({
           items: [{ href: '/admin', label: 'Tổng quan', icon: LayoutDashboard }],
         },
         {
-          label: 'Quản trị',
+          label: 'Governance',
           items: [
+            { href: '/admin/inbox', label: 'Inbox', icon: Inbox },
             { href: '/admin/users', label: 'Users', icon: Users },
             { href: '/admin/sources', label: 'Sources', icon: BookMarked },
-            { href: '/builder/modules', label: 'Modules', icon: Layers },
+            { href: '/admin/modules', label: 'Modules', icon: Layers },
             { href: '/admin/audit', label: 'Audit log', icon: ClipboardList },
+            { href: '/admin/settings', label: 'Settings', icon: Settings },
           ],
         },
         {
