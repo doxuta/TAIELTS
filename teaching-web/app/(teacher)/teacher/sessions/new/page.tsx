@@ -146,10 +146,13 @@ export default function NewSessionPage() {
 
             <div className="space-y-1.5">
               <Label>Giáo án liên kết (tuỳ chọn)</Label>
-              <Select value={form.lessonPlanId} onValueChange={set('lessonPlanId')}>
+              <Select
+                value={form.lessonPlanId || 'none'}
+                onValueChange={(v) => set('lessonPlanId')(v === 'none' ? '' : v)}
+              >
                 <SelectTrigger><SelectValue placeholder="Không liên kết" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Không liên kết</SelectItem>
+                  <SelectItem value="none">Không liên kết</SelectItem>
                   {lessons.filter(l => l.sessionType === form.sessionType).map(l => (
                     <SelectItem key={l.id} value={l.id}>{l.title}</SelectItem>
                   ))}
