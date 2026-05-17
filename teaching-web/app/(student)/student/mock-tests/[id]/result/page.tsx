@@ -8,6 +8,8 @@ import { BandPill } from '@/components/ui/BandPill'
 import { SkillRadar } from '@/components/ui/SkillRadar'
 import { ConfettiBurst } from '@/components/ui/ConfettiBurst'
 import { QuestionRenderer, type Question } from '@/components/ui/QuestionRenderer'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 interface Attempt {
   id: string
@@ -30,7 +32,7 @@ interface Attempt {
 
 const SKILL_LABEL = { LISTENING: 'Nghe', READING: 'Đọc', WRITING: 'Viết', SPEAKING: 'Nói' }
 
-export default function MockTestResultPage({ params }: { params: { id: string } }) {
+export default function MockTestResultPage(_props: { params: { id: string } }) {
   const searchParams = useSearchParams()
   const attemptId = searchParams.get('attemptId')
   const [attempt, setAttempt] = useState<Attempt | null>(null)
@@ -47,7 +49,7 @@ export default function MockTestResultPage({ params }: { params: { id: string } 
   if (!attempt) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
@@ -62,106 +64,128 @@ export default function MockTestResultPage({ params }: { params: { id: string } 
   const aiFeedbackAnswers = attempt.answers.filter(a => a.aiFeedback)
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-5xl mx-auto space-y-6">
       <ConfettiBurst trigger={showConfetti} />
 
-      <Link href="/student/mock-tests" className="inline-flex items-center gap-2 text-sm text-ink-secondary hover:text-ink mb-4 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Mock Test
-      </Link>
+      <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground -ml-2">
+        <Link href="/student/mock-tests">
+          <ArrowLeft className="w-3 h-3 mr-1" /> Mock Test
+        </Link>
+      </Button>
 
-      <div className="page-header animate-fade-up text-center">
-        <p className="page-subtitle">{attempt.test.title}</p>
-        <h1 className="text-4xl font-display font-bold text-ink mt-2 mb-3">
-          Overall: <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-violet-600">{attempt.overallBand?.toFixed(1) ?? '—'}</span>
+      <header className="text-center">
+        <p className="text-sm text-muted-foreground">{attempt.test.title}</p>
+        <h1 className="text-4xl font-bold tracking-tight mt-2 mb-3">
+          Overall:{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-500">
+            {attempt.overallBand?.toFixed(1) ?? '—'}
+          </span>
         </h1>
-        <p className="text-sm text-ink-tertiary">Hoàn thành {attempt.completedAt && new Date(attempt.completedAt).toLocaleString('vi')}</p>
-      </div>
+        <p className="text-sm text-muted-foreground">
+          Hoàn thành {attempt.completedAt && new Date(attempt.completedAt).toLocaleString('vi')}
+        </p>
+      </header>
 
-      <div className="grid grid-cols-2 gap-6 mb-6 animate-fade-up stagger-1">
-        <div className="card p-6 flex items-center justify-center">
-          <SkillRadar data={radarData} max={9} size={240} />
-        </div>
-        <div className="card p-6 space-y-3">
-          <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider mb-2">Điểm 4 kỹ năng</h2>
-          {(['LISTENING', 'READING', 'WRITING', 'SPEAKING'] as const).map(skill => {
-            const key = `${skill.toLowerCase()}Score` as keyof Attempt
-            const score = attempt[key] as number | null
-            return (
-              <div key={skill} className="flex items-center justify-between py-2 border-b border-surface-border last:border-0">
-                <span className="text-sm text-ink">{SKILL_LABEL[skill]}</span>
-                <BandPill band={score} size="md" />
-              </div>
-            )
-          })}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <Card>
+          <CardContent className="p-6 flex items-center justify-center">
+            <SkillRadar data={radarData} max={9} size={240} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 space-y-3">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Điểm 4 kỹ năng
+            </h2>
+            {(['LISTENING', 'READING', 'WRITING', 'SPEAKING'] as const).map(skill => {
+              const key = `${skill.toLowerCase()}Score` as keyof Attempt
+              const score = attempt[key] as number | null
+              return (
+                <div key={skill} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <span className="text-sm">{SKILL_LABEL[skill]}</span>
+                  <BandPill band={score} size="md" />
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
       </div>
 
       {aiFeedbackAnswers.length > 0 && (
-        <div className="space-y-4 animate-fade-up stagger-2">
-          <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider">AI Feedback chi tiết</h2>
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            AI Feedback chi tiết
+          </h2>
           {aiFeedbackAnswers.map(ans => {
             const fb = ans.aiFeedback ? JSON.parse(ans.aiFeedback) : null
             if (!fb) return null
             return (
-              <div key={ans.id} className="card p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-ink-tertiary uppercase tracking-wider">{ans.question.questionType}</p>
-                  <BandPill band={fb.overallBand} />
-                </div>
-                <p className="text-sm text-ink-secondary mb-3 italic">{ans.question.prompt}</p>
+              <Card key={ans.id}>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">{ans.question.questionType}</p>
+                    <BandPill band={fb.overallBand} />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3 italic">{ans.question.prompt}</p>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  {Object.entries(fb).filter(([k]) => !['overallBand', 'summaryFeedback', 'improvementSuggestions'].includes(k)).map(([criterion, value]: any) => (
-                    <div key={criterion} className="p-3 bg-surface-secondary rounded-lg">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-semibold text-ink uppercase tracking-wider">{criterion}</p>
-                        <BandPill band={value?.band} size="sm" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    {Object.entries(fb).filter(([k]) => !['overallBand', 'summaryFeedback', 'improvementSuggestions'].includes(k)).map(([criterion, value]: any) => (
+                      <div key={criterion} className="p-3 bg-muted rounded-md">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-semibold uppercase tracking-wider">{criterion}</p>
+                          <BandPill band={value?.band} size="sm" />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">{value?.justification}</p>
                       </div>
-                      <p className="text-[11px] text-ink-secondary leading-relaxed">{value?.justification}</p>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                {fb.summaryFeedback && (
-                  <div className="p-3 bg-brand-50/40 rounded-lg border border-brand-200 mb-2">
-                    <p className="text-xs font-semibold text-brand-700 uppercase tracking-wider mb-1">Tóm tắt</p>
-                    <p className="text-sm text-ink">{fb.summaryFeedback}</p>
-                  </div>
-                )}
-                {fb.improvementSuggestions?.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-ink-tertiary uppercase tracking-wider mb-1">Cần cải thiện</p>
-                    <ul className="list-disc pl-5 text-sm text-ink-secondary space-y-1">
-                      {fb.improvementSuggestions.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </div>
+                  {fb.summaryFeedback && (
+                    <div className="p-3 rounded-md border border-primary/30 bg-primary/5 mb-2">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Tóm tắt</p>
+                      <p className="text-sm">{fb.summaryFeedback}</p>
+                    </div>
+                  )}
+                  {fb.improvementSuggestions?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        Cần cải thiện
+                      </p>
+                      <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                        {fb.improvementSuggestions.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             )
           })}
         </div>
       )}
 
-      {/* Review objective questions */}
       {attempt.answers.filter(a => a.isCorrect != null).length > 0 && (
-        <details className="card p-5 mt-6 animate-fade-up stagger-3">
-          <summary className="cursor-pointer text-sm font-semibold text-ink-secondary uppercase tracking-wider">
-            Xem lại câu khách quan ({attempt.answers.filter(a => a.isCorrect != null).length} câu)
-          </summary>
-          <div className="mt-4 space-y-3">
-            {attempt.answers.filter(a => a.isCorrect != null).map((a, i) => (
-              <div key={a.id}>
-                <QuestionRenderer
-                  question={{ id: a.id, questionNumber: i + 1, ...a.question } as Question}
-                  answer={a.answer}
-                  onChange={() => {}}
-                  showCorrect
-                  readOnly
-                />
+        <Card>
+          <CardContent className="p-5">
+            <details>
+              <summary className="cursor-pointer text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Xem lại câu khách quan ({attempt.answers.filter(a => a.isCorrect != null).length} câu)
+              </summary>
+              <div className="mt-4 space-y-3">
+                {attempt.answers.filter(a => a.isCorrect != null).map((a, i) => (
+                  <div key={a.id}>
+                    <QuestionRenderer
+                      question={{ id: a.id, questionNumber: i + 1, ...a.question } as Question}
+                      answer={a.answer}
+                      onChange={() => {}}
+                      showCorrect
+                      readOnly
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </details>
+            </details>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

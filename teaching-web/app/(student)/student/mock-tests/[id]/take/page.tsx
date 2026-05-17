@@ -3,9 +3,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Save } from 'lucide-react'
+import { toast } from 'sonner'
 import { Timer } from '@/components/ui/Timer'
 import { QuestionRenderer, type Question } from '@/components/ui/QuestionRenderer'
-import { useToast } from '@/components/ui/Toast'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 interface Part {
   id: string
@@ -35,7 +37,6 @@ export default function TakeMockTestPage({ params }: { params: { id: string } })
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [saving, setSaving] = useState(false)
-  const { toast, ToastContainer } = useToast()
 
   useEffect(() => {
     Promise.all([
@@ -60,20 +61,18 @@ export default function TakeMockTestPage({ params }: { params: { id: string } })
       body: JSON.stringify({ answers: payload }),
     })
     setSaving(false)
-    toast('Đã lưu tiến độ', 'success')
+    toast.success('Đã lưu tiến độ')
   }
 
   const submitTest = async () => {
     if (!attemptId) return
     setSubmitting(true)
-    // Save answers first
     const payload = Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer }))
     await fetch(`/api/attempts/${attemptId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers: payload }),
     })
-    // Trigger scoring
     await fetch(`/api/attempts/${attemptId}/score`, { method: 'POST' })
     setSubmitting(false)
     router.push(`/student/mock-tests/${params.id}/result?attemptId=${attemptId}`)
@@ -82,96 +81,99 @@ export default function TakeMockTestPage({ params }: { params: { id: string } })
   if (!test) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Sticky header with timer */}
-      <header className="sticky top-0 z-30 bg-surface border-b border-surface-border px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <p className="text-sm font-semibold text-ink">{test.title}</p>
-          <span className="text-xs text-ink-tertiary">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 md:px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <p className="text-sm font-semibold truncate">{test.title}</p>
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
             Part {partIdx + 1} / {test.parts.length} · {currentPart && SKILL_LABEL[currentPart.skill]}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Timer totalSeconds={totalSeconds} onExpire={submitTest} />
-          <button onClick={saveProgress} disabled={saving} className="btn-secondary text-xs">
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Lưu
-          </button>
+          <Button size="sm" variant="secondary" onClick={saveProgress} disabled={saving}>
+            {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1" />}
+            Lưu
+          </Button>
         </div>
       </header>
 
-      {/* Part nav */}
-      <div className="px-6 py-2 bg-surface-secondary border-b border-surface-border">
+      <div className="px-4 md:px-6 py-2 bg-muted/40 border-b">
         <div className="flex gap-1.5 overflow-x-auto">
           {test.parts.map((p, i) => (
-            <button
+            <Button
               key={p.id}
+              size="sm"
+              variant={i === partIdx ? 'default' : 'outline'}
               onClick={() => setPartIdx(i)}
-              className={`shrink-0 px-3 py-1 rounded-md text-xs font-medium transition-all ${i === partIdx ? 'bg-brand-600 text-white' : 'bg-surface text-ink-secondary border border-surface-border hover:bg-surface-tertiary'}`}
+              className="shrink-0 h-7 px-3 text-xs"
             >
               {SKILL_LABEL[p.skill]} · P{p.partNumber}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      {/* Content */}
-      <main className="flex-1 px-6 py-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 px-4 md:px-6 py-6 max-w-7xl mx-auto w-full">
         {currentPart && (
-          <div className={`grid gap-6 ${currentPart.passage ? 'grid-cols-2' : 'grid-cols-1 max-w-3xl mx-auto'}`}>
+          <div className={`grid gap-5 ${currentPart.passage ? 'lg:grid-cols-2' : 'grid-cols-1 max-w-3xl mx-auto'}`}>
             {currentPart.passage && (
-              <div className="card p-6 max-h-[calc(100vh-200px)] overflow-y-auto sticky top-32">
-                {currentPart.title && <h2 className="text-base font-bold text-ink mb-3">{currentPart.title}</h2>}
-                <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{currentPart.passage}</p>
-              </div>
+              <Card className="max-h-[calc(100vh-200px)] overflow-y-auto lg:sticky lg:top-32">
+                <CardContent className="p-5">
+                  {currentPart.title && <h2 className="text-base font-bold mb-3">{currentPart.title}</h2>}
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{currentPart.passage}</p>
+                </CardContent>
+              </Card>
             )}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {currentPart.instructions && (
-                <div className="p-3 bg-brand-50/40 rounded-lg border border-brand-200 text-xs text-brand-800">
+                <div className="p-3 rounded-md border border-primary/30 bg-primary/5 text-xs">
                   {currentPart.instructions}
                 </div>
               )}
               {currentPart.questions.map(q => (
-                <div key={q.id} className="card p-4">
-                  <QuestionRenderer
-                    question={q}
-                    answer={answers[q.id] ?? ''}
-                    onChange={(v) => setAnswers(prev => ({ ...prev, [q.id]: v }))}
-                  />
-                </div>
+                <Card key={q.id}>
+                  <CardContent className="p-4">
+                    <QuestionRenderer
+                      question={q}
+                      answer={answers[q.id] ?? ''}
+                      onChange={(v) => setAnswers(prev => ({ ...prev, [q.id]: v }))}
+                    />
+                  </CardContent>
+                </Card>
               ))}
 
-              {/* Navigation */}
-              <div className="flex justify-between pt-4 border-t border-surface-border">
-                <button
+              <div className="flex justify-between pt-4 border-t">
+                <Button
                   disabled={partIdx === 0}
+                  variant="secondary"
                   onClick={() => setPartIdx(p => p - 1)}
-                  className="btn-secondary text-sm disabled:opacity-30"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Part trước
-                </button>
+                  <ArrowLeft className="w-4 h-4 mr-1" /> Part trước
+                </Button>
                 {partIdx < test.parts.length - 1 ? (
-                  <button onClick={() => setPartIdx(p => p + 1)} className="btn-primary text-sm">
-                    Part tiếp <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <Button onClick={() => setPartIdx(p => p + 1)}>
+                    Part tiếp <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
                 ) : (
-                  <button onClick={submitTest} disabled={submitting} className="btn-primary text-sm">
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  <Button onClick={submitTest} disabled={submitting}>
+                    {submitting
+                      ? <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      : <CheckCircle2 className="w-4 h-4 mr-1" />}
                     Nộp bài & chấm AI
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
           </div>
         )}
       </main>
-
-      {ToastContainer}
     </div>
   )
 }
