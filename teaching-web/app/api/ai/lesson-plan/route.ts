@@ -5,7 +5,7 @@ import { ROADMAP_MONTHS } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'TEACHER') {
+  if (!session || session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

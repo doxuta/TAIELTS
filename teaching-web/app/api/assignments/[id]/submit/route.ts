@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'TEACHER') {
+  if (!session || session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
