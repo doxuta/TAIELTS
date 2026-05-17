@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { Loader2, FileText, Send, RefreshCw } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface Student { id: string; fullName: string; currentMonth: number }
 interface Report { id: string; month: number; year: number; title: string; content: string; sentAt?: string | null }
@@ -14,7 +24,6 @@ export default function ReportsPage() {
   const [report, setReport] = useState<Report | null>(null)
   const [generating, setGenerating] = useState(false)
   const [reports, setReports] = useState<Report[]>([])
-  const { toast, ToastContainer } = useToast()
 
   useEffect(() => {
     fetch('/api/students').then(r => r.json()).then((data: Student[]) => {
@@ -47,65 +56,81 @@ export default function ReportsPage() {
       return [...filtered, data]
     })
     setGenerating(false)
-    toast('Báo cáo tháng đã được tạo!', 'success')
+    toast.success('Báo cáo tháng đã được tạo!')
   }
 
-  const student = students.find(s => s.id === selectedId)
-
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="page-header animate-fade-up">
-        <h1 className="page-title">Báo cáo tháng</h1>
-        <p className="page-subtitle">Tổng hợp tiến độ · Tự động sinh từ rubric + weekly progress</p>
-      </div>
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-5xl mx-auto space-y-6">
+      <header>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Báo cáo tháng</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Tổng hợp tiến độ · Tự động sinh từ rubric + weekly progress
+        </p>
+      </header>
 
-      {/* Controls */}
-      <div className="flex items-center gap-4 mb-6 animate-fade-up stagger-1">
-        <select className="input w-52 text-sm" value={selectedId} onChange={e => setSelectedId(e.target.value)}>
-          {students.map(s => <option key={s.id} value={s.id}>{s.fullName}</option>)}
-        </select>
-        <select className="input w-36 text-sm" value={month} onChange={e => setMonth(parseInt(e.target.value))}>
-          {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-            <option key={m} value={m}>Tháng {m}</option>
-          ))}
-        </select>
-        <button onClick={generate} disabled={generating || !selectedId} className="btn-primary ml-auto">
-          {generating
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang tạo...</>
-            : report
-            ? <><RefreshCw className="w-4 h-4" /> Tạo lại</>
-            : <><FileText className="w-4 h-4" /> Tạo báo cáo</>}
-        </button>
+      <div className="flex items-center gap-3 flex-wrap">
+        <Select value={selectedId} onValueChange={setSelectedId}>
+          <SelectTrigger className="w-52">
+            <SelectValue placeholder="Chọn học viên" />
+          </SelectTrigger>
+          <SelectContent>
+            {students.map(s => (
+              <SelectItem key={s.id} value={s.id}>{s.fullName}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={String(month)} onValueChange={v => setMonth(parseInt(v))}>
+          <SelectTrigger className="w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+              <SelectItem key={m} value={String(m)}>Tháng {m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="ml-auto">
+          <Button onClick={generate} disabled={generating || !selectedId}>
+            {generating
+              ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Đang tạo...</>
+              : report
+              ? <><RefreshCw className="w-4 h-4 mr-1" /> Tạo lại</>
+              : <><FileText className="w-4 h-4 mr-1" /> Tạo báo cáo</>}
+          </Button>
+        </div>
       </div>
 
       {report ? (
-        <div className="space-y-4 animate-fade-up stagger-2">
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-ink">{report.title}</h2>
+        <div className="space-y-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base">{report.title}</CardTitle>
               {report.sentAt && (
-                <span className="badge badge-green flex items-center gap-1">
+                <Badge variant="success" className="flex items-center gap-1">
                   <Send className="w-3 h-3" /> Đã gửi {new Date(report.sentAt).toLocaleDateString('vi')}
-                </span>
+                </Badge>
               )}
-            </div>
-            <pre className="text-sm text-ink leading-relaxed whitespace-pre-wrap font-sans bg-surface-secondary rounded-xl p-4 border border-surface-border">
-              {report.content}
-            </pre>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans bg-muted rounded-lg p-4 border">
+                {report.content}
+              </pre>
+            </CardContent>
+          </Card>
 
-          <div className="text-xs text-ink-tertiary text-right">
+          <p className="text-xs text-muted-foreground text-right">
             Đây là bản preview. Copy nội dung để gửi qua Slack / Email.
-          </div>
+          </p>
         </div>
       ) : (
-        <div className="card p-16 text-center animate-fade-up stagger-2">
-          <FileText className="w-10 h-10 mx-auto mb-3 opacity-30 text-ink-tertiary" />
-          <p className="text-ink-secondary mb-2">Chưa có báo cáo cho tháng {month}.</p>
-          <p className="text-xs text-ink-tertiary">Nhấn "Tạo báo cáo" để tự động tổng hợp từ rubric và weekly progress.</p>
-        </div>
+        <Card>
+          <CardContent className="py-16 text-center">
+            <FileText className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground mb-1">Chưa có báo cáo cho tháng {month}.</p>
+            <p className="text-xs text-muted-foreground/70">Nhấn &ldquo;Tạo báo cáo&rdquo; để tự động tổng hợp từ rubric và weekly progress.</p>
+          </CardContent>
+        </Card>
       )}
-      {ToastContainer}
     </div>
   )
 }

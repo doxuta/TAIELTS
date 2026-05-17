@@ -1,8 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Save, BarChart3 } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { Loader2, Save } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 const SKILLS = [
   { key: 'grammarScore', label: 'Ngữ pháp', desc: 'Nắm cấu trúc, ít lỗi sai' },
@@ -20,7 +32,6 @@ export default function RubricsPage() {
   const [selectedId, setSelectedId] = useState('')
   const [month, setMonth] = useState(new Date().getMonth() + 1)
   const [loading, setLoading] = useState(false)
-  const { toast, ToastContainer } = useToast()
 
   const [scores, setScores] = useState<Record<string, number | null>>({
     grammarScore: null, vocabularyScore: null, listeningScore: null,
@@ -35,7 +46,6 @@ export default function RubricsPage() {
     })
   }, [])
 
-  // Load existing rubric when student/month changes
   useEffect(() => {
     if (!selectedId) return
     fetch(`/api/rubrics?studentId=${selectedId}`)
@@ -64,90 +74,122 @@ export default function RubricsPage() {
       body: JSON.stringify({ studentId: selectedId, month, ...scores, ...text }),
     })
     setLoading(false)
-    if (res.ok) toast('Đã lưu đánh giá tháng!', 'success')
-    else toast('Lưu thất bại, thử lại.', 'error')
+    if (res.ok) toast.success('Đã lưu đánh giá tháng!')
+    else toast.error('Lưu thất bại, thử lại.')
   }
 
   const student = students.find(s => s.id === selectedId)
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="page-header animate-fade-up">
-        <h1 className="page-title">Đánh giá tháng</h1>
-        <p className="page-subtitle">Rubric 6 kỹ năng · Thang 1–5 · Ghi nhận điểm mạnh/yếu</p>
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-4xl mx-auto space-y-6">
+      <header>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Đánh giá tháng</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Rubric 6 kỹ năng · Thang 1–5 · Ghi nhận điểm mạnh/yếu
+        </p>
+      </header>
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <Select value={selectedId} onValueChange={setSelectedId}>
+          <SelectTrigger className="w-52">
+            <SelectValue placeholder="Chọn học viên" />
+          </SelectTrigger>
+          <SelectContent>
+            {students.map(s => (
+              <SelectItem key={s.id} value={s.id}>{s.fullName}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={String(month)} onValueChange={v => setMonth(parseInt(v))}>
+          <SelectTrigger className="w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+              <SelectItem key={m} value={String(m)}>Tháng {m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {student && <span className="text-sm text-muted-foreground">Hiện tại: T{student.currentMonth}</span>}
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-4 mb-6 animate-fade-up stagger-1">
-        <select className="input w-52 text-sm" value={selectedId} onChange={e => setSelectedId(e.target.value)}>
-          {students.map(s => <option key={s.id} value={s.id}>{s.fullName}</option>)}
-        </select>
-        <select className="input w-36 text-sm" value={month} onChange={e => setMonth(parseInt(e.target.value))}>
-          {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-            <option key={m} value={m}>Tháng {m}</option>
-          ))}
-        </select>
-        {student && <span className="text-sm text-ink-secondary">Hiện tại: T{student.currentMonth}</span>}
-      </div>
-
-      {/* Score grid */}
-      <div className="card p-6 mb-5 animate-fade-up stagger-2">
-        <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider mb-5">Điểm 6 kỹ năng</h2>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-          {SKILLS.map(({ key, label, desc }) => (
-            <div key={key}>
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="text-sm font-medium text-ink">{label}</p>
-                  <p className="text-xs text-ink-tertiary">{desc}</p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+            Điểm 6 kỹ năng
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            {SKILLS.map(({ key, label, desc }) => (
+              <div key={key}>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-sm font-medium">{label}</p>
+                    <p className="text-xs text-muted-foreground">{desc}</p>
+                  </div>
+                  <span className={cn(
+                    'text-lg font-bold tabular-nums',
+                    scores[key] ? 'text-primary' : 'text-muted-foreground/50'
+                  )}>
+                    {scores[key] ?? '—'}
+                  </span>
                 </div>
-                <span className={`text-lg font-bold tabular-nums ${scores[key] ? 'text-brand-600' : 'text-ink-placeholder'}`}>
-                  {scores[key] ?? '—'}
-                </span>
+                <div className="flex gap-1.5">
+                  {[null, 1, 2, 3, 4, 5].map(v => (
+                    <Button
+                      key={String(v)}
+                      type="button"
+                      size="sm"
+                      variant={scores[key] === v ? 'default' : 'outline'}
+                      className={cn(
+                        'flex-1 h-8 px-0 text-xs',
+                        v === null && scores[key] !== v && 'text-muted-foreground'
+                      )}
+                      onClick={() => setScores(s => ({ ...s, [key]: v }))}
+                    >
+                      {v === null ? 'Clear' : v}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-1.5">
-                {[null, 1, 2, 3, 4, 5].map(v => (
-                  <button key={String(v)} type="button"
-                    onClick={() => setScores(s => ({ ...s, [key]: v }))}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all
-                      ${scores[key] === v
-                        ? 'bg-brand-600 border-brand-600 text-white'
-                        : v === null ? 'bg-surface-tertiary border-surface-border text-ink-tertiary text-[9px]'
-                        : 'bg-surface-tertiary border-surface-border text-ink-secondary hover:border-brand-300'}`}>
-                    {v === null ? 'Clear' : v}
-                  </button>
-                ))}
-              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+            Ghi nhận định tính
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[
+            { key: 'strongPoints', label: 'Điểm mạnh tháng này' },
+            { key: 'improvements', label: 'Cần cải thiện' },
+            { key: 'nextMonthFocus', label: 'Trọng tâm tháng sau' },
+          ].map(({ key, label }) => (
+            <div key={key} className="space-y-1.5">
+              <Label>{label}</Label>
+              <Textarea
+                rows={2}
+                value={text[key as keyof typeof text]}
+                onChange={e => setText(t => ({ ...t, [key]: e.target.value }))}
+                placeholder={`${label}...`}
+              />
             </div>
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Qualitative */}
-      <div className="card p-6 space-y-4 animate-fade-up stagger-3">
-        <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider">Ghi nhận định tính</h2>
-        {[
-          { key: 'strongPoints', label: 'Điểm mạnh tháng này' },
-          { key: 'improvements', label: 'Cần cải thiện' },
-          { key: 'nextMonthFocus', label: 'Trọng tâm tháng sau' },
-        ].map(({ key, label }) => (
-          <div key={key}>
-            <label className="label">{label}</label>
-            <textarea className="input resize-none text-sm" rows={2}
-              value={text[key as keyof typeof text]}
-              onChange={e => setText(t => ({ ...t, [key]: e.target.value }))}
-              placeholder={`${label}...`} />
-          </div>
-        ))}
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={loading || !selectedId}>
+          {loading
+            ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Đang lưu</>
+            : <><Save className="w-4 h-4 mr-1" /> Lưu đánh giá</>}
+        </Button>
       </div>
-
-      <div className="flex justify-end mt-5 animate-fade-up stagger-4">
-        <button onClick={handleSave} disabled={loading || !selectedId} className="btn-primary">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4" /> Lưu đánh giá</>}
-        </button>
-      </div>
-
-      {ToastContainer}
     </div>
   )
 }
