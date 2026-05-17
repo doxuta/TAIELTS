@@ -2,6 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const ROLES = ['ADMIN', 'TEACHER', 'STUDENT'] as const
 
@@ -15,14 +23,13 @@ interface Props {
 export function RoleSelector({ userId, currentRole, selfId, isLastAdmin }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
   const [value, setValue] = useState(currentRole)
 
   const isSelf = selfId === userId
   const disabled = pending || (isSelf && value === 'ADMIN') || isLastAdmin
 
   async function change(next: string) {
-    setError(null)
+    const prev = value
     setValue(next)
     const res = await fetch(`/api/admin/users/${userId}`, {
       method: 'PATCH',
@@ -31,32 +38,32 @@ export function RoleSelector({ userId, currentRole, selfId, isLastAdmin }: Props
     })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data?.error ?? 'Update failed')
-      setValue(currentRole)
+      setValue(prev)
+      toast.error(data?.error ?? 'Update failed')
       return
     }
+    toast.success(`Đổi role thành ${next}`)
     startTransition(() => router.refresh())
   }
 
   return (
     <div className="flex flex-col gap-1">
-      <select
-        value={value}
-        onChange={(e) => change(e.target.value)}
-        disabled={disabled}
-        className="rounded-md border border-surface-border bg-surface-primary px-2 py-1 text-xs disabled:opacity-50"
-      >
-        {ROLES.map((r) => (
-          <option key={r} value={r}>
-            {r}
-          </option>
-        ))}
-      </select>
-      {isSelf && <span className="text-[10px] text-ink-tertiary">(yourself)</span>}
+      <Select value={value} onValueChange={change} disabled={disabled}>
+        <SelectTrigger className="h-8 w-[120px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {ROLES.map((r) => (
+            <SelectItem key={r} value={r} className="text-xs">
+              {r}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {isSelf && <span className="text-[10px] text-muted-foreground">(yourself)</span>}
       {isLastAdmin && !isSelf && (
-        <span className="text-[10px] text-ink-tertiary">last admin</span>
+        <span className="text-[10px] text-muted-foreground">last admin</span>
       )}
-      {error && <span className="text-[10px] text-red-600">{error}</span>}
     </div>
   )
 }

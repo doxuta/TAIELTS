@@ -33,10 +33,10 @@ __pycache__/
 📦*
 IELTS */
 
-# Unrelated drafts / scratch
-dashboard/
-idea.html
-idea.pdf
+# Unrelated drafts / scratch (root-level only)
+/dashboard/
+/idea.html
+/idea.pdf
 
 # Local agent/editor state
 .agent/

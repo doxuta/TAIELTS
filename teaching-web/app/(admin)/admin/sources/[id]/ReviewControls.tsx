@@ -1,16 +1,20 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 import { REVIEW_STATUSES, reviewLabel, type ReviewStatus } from '@/lib/sources'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
-const ACTIONS: { status: ReviewStatus; tone: string }[] = [
-  { status: 'DRAFT', tone: 'bg-slate-100 text-slate-700 hover:bg-slate-200' },
-  { status: 'PENDING_REVIEW', tone: 'bg-amber-100 text-amber-700 hover:bg-amber-200' },
-  { status: 'APPROVED', tone: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' },
-  { status: 'DEPRECATED', tone: 'bg-orange-100 text-orange-700 hover:bg-orange-200' },
-  { status: 'BLOCKED', tone: 'bg-red-100 text-red-700 hover:bg-red-200' },
-]
+const TONE: Record<ReviewStatus, 'default' | 'secondary' | 'destructive' | 'success' | 'warning' | 'outline'> = {
+  DRAFT: 'outline',
+  PENDING_REVIEW: 'warning',
+  APPROVED: 'success',
+  DEPRECATED: 'secondary',
+  BLOCKED: 'destructive',
+}
 
 export function ReviewControls({
   sourceId,
@@ -21,10 +25,8 @@ export function ReviewControls({
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
 
   async function setStatus(next: ReviewStatus) {
-    setError(null)
     const res = await fetch(`/api/sources/${sourceId}/review`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -32,40 +34,51 @@ export function ReviewControls({
     })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      setError(data?.error ?? 'Update failed')
+      toast.error(data?.error ?? 'Update failed')
       return
     }
+    toast.success(`Trạng thái: ${reviewLabel(next)}`)
     startTransition(() => router.refresh())
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">Hiện tại:</span>
+        <Badge variant={TONE[currentStatus as ReviewStatus] ?? 'outline'}>
+          {reviewLabel(currentStatus)}
+        </Badge>
+      </div>
       <div className="flex flex-wrap gap-2">
-        {ACTIONS.map((a) => {
-          const active = a.status === currentStatus
+        {REVIEW_STATUSES.map((status) => {
+          const active = status === currentStatus
+          const variant = active ? TONE[status] : 'outline'
           return (
-            <button
-              key={a.status}
+            <Button
+              key={status}
               type="button"
+              variant={variant === 'success' || variant === 'warning' || variant === 'destructive' ? 'default' : variant}
+              size="sm"
               disabled={pending || active}
-              onClick={() => setStatus(a.status)}
-              className={`rounded-md px-3 py-1 text-xs font-semibold uppercase tracking-wide transition-colors disabled:opacity-50 ${a.tone} ${
-                active ? 'ring-2 ring-offset-1 ring-current' : ''
-              }`}
+              onClick={() => setStatus(status)}
+              className={
+                active
+                  ? variant === 'success'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : variant === 'warning'
+                      ? 'bg-amber-500 hover:bg-amber-600'
+                      : variant === 'destructive'
+                        ? 'bg-destructive hover:bg-destructive/90'
+                        : ''
+                  : ''
+              }
             >
-              {reviewLabel(a.status)}
-            </button>
+              {pending && <Loader2 className="h-3 w-3 animate-spin" />}
+              {reviewLabel(status)}
+            </Button>
           )
         })}
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      <p className="text-xs text-ink-tertiary">
-        Trạng thái hiện tại: <span className="font-semibold">{reviewLabel(currentStatus)}</span>.
-        Hành động này được audit log ghi lại.
-      </p>
-      <p className="text-[11px] text-ink-tertiary">
-        ({REVIEW_STATUSES.join(' / ')})
-      </p>
     </div>
   )
 }
