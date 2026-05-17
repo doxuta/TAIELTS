@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, Loader2, Pencil } from 'lucide-react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function LessonActions({ lessonId, currentStatus }: { lessonId: string; currentStatus: string }) {
   const router = useRouter()
@@ -22,10 +23,12 @@ export default function LessonActions({ lessonId, currentStatus }: { lessonId: s
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
       {currentStatus !== 'COMPLETED' && (
-        <button onClick={markCompleted} disabled={loading} className="btn-primary text-sm">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+        <Button onClick={markCompleted} disabled={loading}>
+          {loading
+            ? <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            : <CheckCircle2 className="w-4 h-4 mr-1" />}
           Đánh dấu đã dạy
-        </button>
+        </Button>
       )}
     </div>
   )

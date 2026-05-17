@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { BandPill } from '@/components/ui/BandPill'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 export default async function StrategyDetailPage({ params }: { params: { slug: string } }) {
   const article = await db.strategyArticle.findUnique({ where: { slug: params.slug } })
@@ -11,34 +14,44 @@ export default async function StrategyDetailPage({ params }: { params: { slug: s
   const examples = article.examples ? JSON.parse(article.examples) : null
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <Link href="/teacher/strategies" className="inline-flex items-center gap-2 text-sm text-ink-secondary hover:text-ink mb-4 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Strategy Library
-      </Link>
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-3xl mx-auto space-y-5">
+      <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground -ml-2">
+        <Link href="/teacher/strategies">
+          <ArrowLeft className="w-3 h-3 mr-1" /> Strategy Library
+        </Link>
+      </Button>
 
-      <div className="mb-6 animate-fade-up">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="badge badge-slate">{article.skill}</span>
+      <header>
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <Badge variant="secondary">{article.skill}</Badge>
           <BandPill band={article.band} size="sm" />
-          <span className="text-xs text-ink-tertiary inline-flex items-center gap-1">
+          <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
             <Clock className="w-3 h-3" /> {article.readingTimeMin} phút đọc
           </span>
         </div>
-        <h1 className="text-2xl font-display font-bold text-ink mb-2">{article.title}</h1>
-        <p className="text-base text-ink-secondary">{article.summary}</p>
-      </div>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">{article.title}</h1>
+        <p className="text-base text-muted-foreground">{article.summary}</p>
+      </header>
 
-      <div className="card p-6 mb-5 animate-fade-up stagger-1">
-        <article className="prose prose-sm max-w-none text-ink leading-relaxed whitespace-pre-wrap">
-          {article.content}
-        </article>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <article className="prose prose-sm dark:prose-invert max-w-none leading-relaxed whitespace-pre-wrap">
+            {article.content}
+          </article>
+        </CardContent>
+      </Card>
 
       {examples && (
-        <div className="card p-5 animate-fade-up stagger-2 bg-brand-50/30 border-brand-200">
-          <h2 className="text-sm font-semibold text-brand-700 uppercase tracking-wider mb-3">Ví dụ áp dụng</h2>
-          <pre className="text-sm text-ink whitespace-pre-wrap font-sans leading-relaxed">{JSON.stringify(examples, null, 2)}</pre>
-        </div>
+        <Card className="bg-primary/5 border-primary/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm uppercase tracking-wider text-primary">Ví dụ áp dụng</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
+              {JSON.stringify(examples, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

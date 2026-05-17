@@ -4,17 +4,34 @@ import { db } from '@/lib/db'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import { Plus, FileText, Clock, BookOpen } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 const SESSION_COLORS = {
-  A: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', dot: 'bg-violet-500' },
-  B: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-700', dot: 'bg-sky-500' },
-  C: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  A: 'bg-violet-500/10 border-violet-500/30 text-violet-500',
+  B: 'bg-sky-500/10 border-sky-500/30 text-sky-500',
+  C: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500',
 }
 
 const SESSION_LABELS = {
   A: 'Ngữ pháp & Từ vựng',
   B: 'Nghe & Nói',
   C: 'Đọc & Viết',
+}
+
+const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'outline'> = {
+  DRAFT: 'secondary',
+  READY: 'default',
+  COMPLETED: 'success',
+  CANCELLED: 'destructive',
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  DRAFT: 'Nháp',
+  READY: 'Sẵn sàng',
+  COMPLETED: 'Đã dạy',
+  CANCELLED: 'Huỷ',
 }
 
 export default async function LessonsPage() {
@@ -25,70 +42,70 @@ export default async function LessonsPage() {
   })
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="page-header flex items-start justify-between animate-fade-up">
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-5xl mx-auto space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="page-title">Giáo án</h1>
-          <p className="page-subtitle">{lessons.length} giáo án đã tạo</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Giáo án</h1>
+          <p className="text-sm text-muted-foreground mt-1">{lessons.length} giáo án đã tạo</p>
         </div>
-        <Link href="/teacher/lessons/new" className="btn-primary">
-          <Plus className="w-4 h-4" /> Soạn giáo án mới
-        </Link>
-      </div>
+        <Button asChild>
+          <Link href="/teacher/lessons/new">
+            <Plus className="w-4 h-4 mr-1" /> Soạn giáo án mới
+          </Link>
+        </Button>
+      </header>
 
       {lessons.length === 0 ? (
-        <div className="card p-16 text-center animate-fade-up">
-          <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30 text-ink-tertiary" />
-          <h3 className="text-lg font-display font-semibold text-ink mb-2">Chưa có giáo án</h3>
-          <p className="text-sm text-ink-secondary mb-6">Soạn giáo án đầu tiên cho buổi học sắp tới.</p>
-          <Link href="/teacher/lessons/new" className="btn-primary">
-            <Plus className="w-4 h-4" /> Soạn giáo án mới
-          </Link>
-        </div>
+        <Card>
+          <CardContent className="py-16 text-center">
+            <BookOpen className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+            <h3 className="text-lg font-semibold mb-2">Chưa có giáo án</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Soạn giáo án đầu tiên cho buổi học sắp tới.
+            </p>
+            <Button asChild>
+              <Link href="/teacher/lessons/new">
+                <Plus className="w-4 h-4 mr-1" /> Soạn giáo án mới
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-3 animate-fade-up stagger-1">
+        <div className="space-y-2">
           {lessons.map((lesson) => {
-            const colors = SESSION_COLORS[lesson.sessionType as 'A' | 'B' | 'C']
-            const statusColors = {
-              DRAFT: 'badge-slate',
-              READY: 'badge-brand',
-              COMPLETED: 'badge-green',
-              CANCELLED: 'badge-red',
-            }
-            const statusLabels = { DRAFT: 'Nháp', READY: 'Sẵn sàng', COMPLETED: 'Đã dạy', CANCELLED: 'Huỷ' }
+            const sessionClass = SESSION_COLORS[lesson.sessionType as 'A' | 'B' | 'C']
 
             return (
-              <Link key={lesson.id} href={`/teacher/lessons/${lesson.id}`}
-                className="card p-5 block hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <div className="flex items-start gap-4">
-                  {/* Session type badge */}
-                  <div className={`w-10 h-10 rounded-xl border ${colors.bg} ${colors.border} flex items-center justify-center shrink-0`}>
-                    <span className={`text-sm font-bold ${colors.text}`}>{lesson.sessionType}</span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="text-sm font-semibold text-ink">{lesson.title}</h3>
-                      <span className={statusColors[lesson.status as keyof typeof statusColors] || 'badge-slate'}>
-                        {statusLabels[lesson.status as keyof typeof statusLabels]}
-                      </span>
+              <Card key={lesson.id} className="transition-colors hover:border-primary/50">
+                <CardContent className="p-4">
+                  <Link href={`/teacher/lessons/${lesson.id}`} className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-md border flex items-center justify-center shrink-0 ${sessionClass}`}>
+                      <span className="text-sm font-bold">{lesson.sessionType}</span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-ink-tertiary">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Tháng {lesson.month} · Tuần {lesson.week} · Buổi {lesson.sessionNumber}
-                      </span>
-                      <span>{SESSION_LABELS[lesson.sessionType as 'A' | 'B' | 'C']}</span>
-                      {lesson.date && <span>{formatDate(lesson.date)}</span>}
-                    </div>
-                    {lesson.grammarTopic && (
-                      <p className="text-xs text-ink-secondary mt-1.5 truncate">📖 {lesson.grammarTopic}</p>
-                    )}
-                  </div>
 
-                  <FileText className="w-4 h-4 text-ink-placeholder shrink-0" />
-                </div>
-              </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="text-sm font-semibold">{lesson.title}</h3>
+                        <Badge variant={STATUS_VARIANT[lesson.status] ?? 'secondary'}>
+                          {STATUS_LABEL[lesson.status] ?? lesson.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> Tháng {lesson.month} · Tuần {lesson.week} · Buổi {lesson.sessionNumber}
+                        </span>
+                        <span>{SESSION_LABELS[lesson.sessionType as 'A' | 'B' | 'C']}</span>
+                        {lesson.date && <span>{formatDate(lesson.date)}</span>}
+                      </div>
+                      {lesson.grammarTopic && (
+                        <p className="text-xs text-muted-foreground mt-1.5 truncate">📖 {lesson.grammarTopic}</p>
+                      )}
+                    </div>
+
+                    <FileText className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                  </Link>
+                </CardContent>
+              </Card>
             )
           })}
         </div>

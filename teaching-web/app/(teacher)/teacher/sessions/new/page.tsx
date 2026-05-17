@@ -4,9 +4,28 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 const QUALITY_LABELS = ['', 'Kém', 'Yếu', 'Trung bình', 'Khá', 'Tốt']
 const SESSION_TYPES = ['A', 'B', 'C'] as const
+
+const SESSION_ACTIVE: Record<string, string> = {
+  A: 'bg-violet-600 border-violet-600 text-white',
+  B: 'bg-sky-600 border-sky-600 text-white',
+  C: 'bg-emerald-600 border-emerald-600 text-white',
+}
 
 interface Student { id: string; fullName: string; currentMonth: number; currentWeek: number }
 interface Lesson { id: string; title: string; sessionType: string }
@@ -64,170 +83,222 @@ export default function NewSessionPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <div className="animate-fade-up mb-8">
-        <Link href="/teacher/dashboard" className="inline-flex items-center gap-2 text-sm text-ink-secondary hover:text-ink mb-4 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Quay lại Dashboard
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-3xl mx-auto space-y-5">
+      <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground -ml-2">
+        <Link href="/teacher/dashboard">
+          <ArrowLeft className="w-3 h-3 mr-1" /> Quay lại Dashboard
         </Link>
-        <h1 className="page-title">Ghi nhận buổi học</h1>
-        <p className="page-subtitle">Điểm danh + đánh giá chất lượng sau mỗi buổi A / B / C</p>
-      </div>
+      </Button>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Session meta */}
-        <div className="card p-6 space-y-4 animate-fade-up stagger-1">
-          <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider">Thông tin buổi học</h2>
+      <header>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Ghi nhận buổi học</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Điểm danh + đánh giá chất lượng sau mỗi buổi A / B / C
+        </p>
+      </header>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">Học viên *</label>
-              <select className="input" value={form.studentId} onChange={e => set('studentId')(e.target.value)} required>
-                <option value="">Chọn học viên</option>
-                {students.map(s => (
-                  <option key={s.id} value={s.id}>{s.fullName}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label">Ngày học *</label>
-              <input className="input" type="date" value={form.date} onChange={e => set('date')(e.target.value)} required />
-            </div>
-          </div>
-
-          <div>
-            <label className="label">Loại buổi</label>
-            <div className="flex gap-2">
-              {SESSION_TYPES.map(t => (
-                <button key={t} type="button"
-                  onClick={() => set('sessionType')(t)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all
-                    ${form.sessionType === t
-                      ? t === 'A' ? 'bg-violet-600 border-violet-600 text-white'
-                        : t === 'B' ? 'bg-sky-600 border-sky-600 text-white'
-                        : 'bg-emerald-600 border-emerald-600 text-white'
-                      : 'bg-surface-tertiary border-surface-border text-ink-secondary'}`}>
-                  Buổi {t}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="label">Giáo án liên kết (tuỳ chọn)</label>
-            <select className="input" value={form.lessonPlanId} onChange={e => set('lessonPlanId')(e.target.value)}>
-              <option value="">Không liên kết</option>
-              {lessons.filter(l => l.sessionType === form.sessionType).map(l => (
-                <option key={l.id} value={l.id}>{l.title}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Attendance + quality */}
-        <div className="card p-6 space-y-5 animate-fade-up stagger-2">
-          <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider">Điểm danh & Đánh giá</h2>
-
-          <div className="flex items-center gap-3">
-            <button type="button"
-              onClick={() => set('attended')(!form.attended)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all
-                ${form.attended ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-surface-tertiary border-surface-border text-ink-secondary'}`}>
-              <CheckCircle2 className="w-4 h-4" />
-              {form.attended ? 'Đã tham gia' : 'Vắng mặt'}
-            </button>
-            {!form.attended && (
-              <span className="text-xs text-ink-tertiary">Buổi vắng sẽ không tính vào tổng số buổi</span>
-            )}
-          </div>
-
-          {form.attended && (
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { key: 'quality', label: 'Chất lượng' },
-                { key: 'attitude', label: 'Thái độ' },
-                { key: 'comprehension', label: 'Hiểu bài' },
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <label className="label">{label}</label>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map(v => (
-                      <button key={v} type="button"
-                        onClick={() => set(key as any)(v)}
-                        className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all
-                          ${form[key as keyof typeof form] === v
-                            ? 'bg-brand-600 border-brand-600 text-white'
-                            : 'bg-surface-tertiary border-surface-border text-ink-secondary hover:border-brand-300'}`}>
-                        {v}
-                      </button>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+              Thông tin buổi học
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Học viên *</Label>
+                <Select value={form.studentId} onValueChange={set('studentId')} required>
+                  <SelectTrigger><SelectValue placeholder="Chọn học viên" /></SelectTrigger>
+                  <SelectContent>
+                    {students.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.fullName}</SelectItem>
                     ))}
-                  </div>
-                  <p className="text-[10px] text-ink-tertiary mt-1 text-center">
-                    {QUALITY_LABELS[form[key as keyof typeof form] as number] ?? ''}
-                  </p>
-                </div>
-              ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="date">Ngày học *</Label>
+                <Input id="date" type="date" value={form.date} onChange={e => set('date')(e.target.value)} required />
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Skills done */}
-        {form.attended && (
-          <div className="card p-6 animate-fade-up stagger-3">
-            <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider mb-4">Kỹ năng đã luyện</h2>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: 'grammarDone', label: 'Ngữ pháp' },
-                { key: 'vocabDone', label: 'Từ vựng' },
-                { key: 'listeningDone', label: 'Nghe' },
-                { key: 'speakingDone', label: 'Nói' },
-                { key: 'readingDone', label: 'Đọc' },
-                { key: 'writingDone', label: 'Viết' },
-              ].map(({ key, label }) => (
-                <button key={key} type="button"
-                  onClick={() => set(key as any)(!form[key as keyof typeof form])}
-                  className={`py-2 rounded-xl text-xs font-semibold border transition-all
-                    ${form[key as keyof typeof form]
-                      ? 'bg-brand-50 border-brand-300 text-brand-700'
-                      : 'bg-surface-tertiary border-surface-border text-ink-secondary'}`}>
-                  {form[key as keyof typeof form] ? '✓ ' : ''}{label}
-                </button>
-              ))}
+            <div className="space-y-1.5">
+              <Label>Loại buổi</Label>
+              <div className="flex gap-2">
+                {SESSION_TYPES.map(t => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => set('sessionType')(t)}
+                    className={cn(
+                      'flex-1 py-2.5 rounded-md text-sm font-bold border transition-all',
+                      form.sessionType === t
+                        ? SESSION_ACTIVE[t]
+                        : 'bg-muted/30 border-border text-muted-foreground hover:border-primary/40'
+                    )}
+                  >
+                    Buổi {t}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+
+            <div className="space-y-1.5">
+              <Label>Giáo án liên kết (tuỳ chọn)</Label>
+              <Select value={form.lessonPlanId} onValueChange={set('lessonPlanId')}>
+                <SelectTrigger><SelectValue placeholder="Không liên kết" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Không liên kết</SelectItem>
+                  {lessons.filter(l => l.sessionType === form.sessionType).map(l => (
+                    <SelectItem key={l.id} value={l.id}>{l.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+              Điểm danh & Đánh giá
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button
+                type="button"
+                onClick={() => set('attended')(!form.attended)}
+                className={cn(
+                  form.attended
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : ''
+                )}
+                variant={form.attended ? 'default' : 'outline'}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-1" />
+                {form.attended ? 'Đã tham gia' : 'Vắng mặt'}
+              </Button>
+              {!form.attended && (
+                <span className="text-xs text-muted-foreground">Buổi vắng sẽ không tính vào tổng số buổi</span>
+              )}
+            </div>
+
+            {form.attended && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { key: 'quality', label: 'Chất lượng' },
+                  { key: 'attitude', label: 'Thái độ' },
+                  { key: 'comprehension', label: 'Hiểu bài' },
+                ].map(({ key, label }) => (
+                  <div key={key} className="space-y-1.5">
+                    <Label>{label}</Label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(v => (
+                        <Button
+                          key={v}
+                          type="button"
+                          size="sm"
+                          variant={form[key as keyof typeof form] === v ? 'default' : 'outline'}
+                          onClick={() => set(key as any)(v)}
+                          className="flex-1 h-8 px-0 text-xs"
+                        >
+                          {v}
+                        </Button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      {QUALITY_LABELS[form[key as keyof typeof form] as number] ?? ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {form.attended && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+                Kỹ năng đã luyện
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { key: 'grammarDone', label: 'Ngữ pháp' },
+                  { key: 'vocabDone', label: 'Từ vựng' },
+                  { key: 'listeningDone', label: 'Nghe' },
+                  { key: 'speakingDone', label: 'Nói' },
+                  { key: 'readingDone', label: 'Đọc' },
+                  { key: 'writingDone', label: 'Viết' },
+                ].map(({ key, label }) => (
+                  <Button
+                    key={key}
+                    type="button"
+                    size="sm"
+                    variant={form[key as keyof typeof form] ? 'default' : 'outline'}
+                    onClick={() => set(key as any)(!form[key as keyof typeof form])}
+                    className="h-9"
+                  >
+                    {form[key as keyof typeof form] ? '✓ ' : ''}{label}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Notes */}
-        <div className="card p-6 space-y-4 animate-fade-up stagger-4">
-          <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider">Ghi chú</h2>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+              Ghi chú
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="err">Lỗi sai cần ghi nhận (Sổ Tay Lỗi Sai)</Label>
+              <Textarea
+                id="err"
+                rows={3}
+                value={form.errorLog}
+                onChange={e => set('errorLog')(e.target.value)}
+                placeholder="VD: Nhầm thì hiện tại hoàn thành với quá khứ đơn..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="hw">Giao bài tập về nhà</Label>
+              <Textarea
+                id="hw"
+                rows={3}
+                value={form.homework}
+                onChange={e => set('homework')(e.target.value)}
+                placeholder="Bài 1: ... Deadline: ..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="note">Ghi chú giáo viên</Label>
+              <Textarea
+                id="note"
+                rows={2}
+                value={form.noteForTeacher}
+                onChange={e => set('noteForTeacher')(e.target.value)}
+                placeholder="Nhận xét, lưu ý đặc biệt về buổi học..."
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-          <div>
-            <label className="label">Lỗi sai cần ghi nhận (Sổ Tay Lỗi Sai)</label>
-            <textarea className="input resize-none text-sm" rows={3}
-              value={form.errorLog} onChange={e => set('errorLog')(e.target.value)}
-              placeholder="VD: Nhầm thì hiện tại hoàn thành với quá khứ đơn..." />
-          </div>
-
-          <div>
-            <label className="label">Giao bài tập về nhà</label>
-            <textarea className="input resize-none text-sm" rows={3}
-              value={form.homework} onChange={e => set('homework')(e.target.value)}
-              placeholder="Bài 1: ... Deadline: ..." />
-          </div>
-
-          <div>
-            <label className="label">Ghi chú giáo viên</label>
-            <textarea className="input resize-none text-sm" rows={2}
-              value={form.noteForTeacher} onChange={e => set('noteForTeacher')(e.target.value)}
-              placeholder="Nhận xét, lưu ý đặc biệt về buổi học..." />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Link href="/teacher/dashboard" className="btn-secondary">Huỷ</Link>
-          <button type="submit" disabled={loading || !form.studentId} className="btn-primary">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+        <div className="flex justify-end gap-2 pt-1">
+          <Button asChild variant="ghost">
+            <Link href="/teacher/dashboard">Huỷ</Link>
+          </Button>
+          <Button type="submit" disabled={loading || !form.studentId}>
+            {loading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
             Lưu buổi học
-          </button>
+          </Button>
         </div>
       </form>
     </div>

@@ -2,6 +2,15 @@
 
 import { useState } from 'react'
 import { RoadmapTimeline } from '@/components/roadmap/RoadmapTimeline'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 
 interface Student {
   id: string
@@ -17,33 +26,34 @@ export default function RoadmapClient({ students }: { students: Student[] }) {
 
   if (!active) {
     return (
-      <div className="card p-16 text-center">
-        <p className="text-ink-secondary">Chưa có học viên nào.</p>
-      </div>
+      <Card>
+        <CardContent className="py-16 text-center text-sm text-muted-foreground">
+          Chưa có học viên nào.
+        </CardContent>
+      </Card>
     )
   }
 
   return (
     <>
-      {/* Student selector — only show when multiple */}
       {students.length > 1 && (
-        <div className="flex items-center gap-3 mb-6">
-          <label className="text-sm text-ink-secondary">Học viên:</label>
-          <select
-            className="input w-56 text-sm"
-            value={selectedId}
-            onChange={e => setSelectedId(e.target.value)}
-          >
-            {students.map(s => (
-              <option key={s.id} value={s.id}>{s.fullName}</option>
-            ))}
-          </select>
+        <div className="flex items-center gap-3 mb-5">
+          <Label className="text-sm text-muted-foreground">Học viên:</Label>
+          <Select value={selectedId} onValueChange={setSelectedId}>
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="Chọn học viên" />
+            </SelectTrigger>
+            <SelectContent>
+              {students.map(s => (
+                <SelectItem key={s.id} value={s.id}>{s.fullName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
-      {/* Current progress badge */}
-      <div className="flex items-center gap-2 mb-4 text-sm text-ink-secondary">
-        <span className="font-medium text-ink">{active.fullName}</span>
+      <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground flex-wrap">
+        <span className="font-medium text-foreground">{active.fullName}</span>
         <span>·</span>
         <span>Tháng {active.currentMonth}/12</span>
         <span>·</span>

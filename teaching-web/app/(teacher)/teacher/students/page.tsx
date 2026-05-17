@@ -2,7 +2,11 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import Link from 'next/link'
-import { ArrowRight, Plus, Search } from 'lucide-react'
+import { ArrowRight, Plus } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 export default async function StudentsPage() {
   const session = await getServerSession(authOptions)
@@ -20,85 +24,98 @@ export default async function StudentsPage() {
   const SKILL_LABELS = ['Ngữ pháp', 'Từ vựng', 'Nghe', 'Nói', 'Đọc', 'Viết']
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="page-header flex items-start justify-between animate-fade-up">
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-6xl mx-auto space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="page-title">Học viên</h1>
-          <p className="page-subtitle">{students.length} học viên · Tối đa 10</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Học viên</h1>
+          <p className="text-sm text-muted-foreground mt-1">{students.length} học viên · Tối đa 10</p>
         </div>
-        <Link href="/teacher/students/new" className="btn-primary">
-          <Plus className="w-4 h-4" /> Thêm học viên
-        </Link>
-      </div>
+        <Button asChild>
+          <Link href="/teacher/students/new">
+            <Plus className="w-4 h-4 mr-1" /> Thêm học viên
+          </Link>
+        </Button>
+      </header>
 
       {students.length === 0 ? (
-        <div className="card p-16 text-center animate-fade-up">
-          <p className="text-5xl mb-4">🎓</p>
-          <h3 className="text-lg font-display font-semibold text-ink mb-2">Chưa có học viên</h3>
-          <p className="text-sm text-ink-secondary mb-6">Thêm học viên đầu tiên để bắt đầu quản lý lộ trình.</p>
-          <Link href="/teacher/students/new" className="btn-primary">
-            <Plus className="w-4 h-4" /> Thêm học viên
-          </Link>
-        </div>
+        <Card>
+          <CardContent className="py-16 text-center">
+            <p className="text-5xl mb-4">🎓</p>
+            <h3 className="text-lg font-semibold mb-2">Chưa có học viên</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Thêm học viên đầu tiên để bắt đầu quản lý lộ trình.
+            </p>
+            <Button asChild>
+              <Link href="/teacher/students/new">
+                <Plus className="w-4 h-4 mr-1" /> Thêm học viên
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid gap-4 animate-fade-up stagger-1">
-          {students.map((student, i) => {
+        <div className="grid gap-3">
+          {students.map((student) => {
             const rubric = student.monthlyRubrics[0]
             const scores = rubric ? SKILL_KEYS.map(k => rubric[k] ?? 0) : []
-            const avgScore = scores.length ? scores.filter(s => s > 0).reduce((a, b) => a + b, 0) / scores.filter(s => s > 0).length : null
-            const attendance = student.lessonSessions.length
+            const positives = scores.filter(s => s > 0)
+            const avgScore = positives.length ? positives.reduce((a, b) => a + b, 0) / positives.length : null
 
             return (
-              <Link key={student.id} href={`/teacher/students/${student.id}`}
-                className="card p-6 hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 cursor-pointer block"
-              >
-                <div className="flex items-start gap-5">
-                  {/* Avatar */}
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center text-white text-lg font-bold shrink-0">
-                    {student.fullName.charAt(0)}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-base font-display font-semibold text-ink">{student.fullName}</h3>
-                      <span className="badge-brand">Tháng {student.currentMonth}/12</span>
-                      <span className="badge-slate">Tuần {student.currentWeek}</span>
+              <Card key={student.id} className="transition-colors hover:border-primary/50">
+                <CardContent className="p-5">
+                  <Link href={`/teacher/students/${student.id}`} className="flex items-start gap-4 group">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center text-white text-lg font-bold shrink-0">
+                      {student.fullName.charAt(0)}
                     </div>
-                    <p className="text-sm text-ink-secondary mb-3">{student.occupation} · {student.user.email}</p>
 
-                    {/* Skill scores */}
-                    {rubric && (
-                      <div className="flex items-center gap-4">
-                        {SKILL_KEYS.map((k, j) => {
-                          const s = rubric[k] ?? 0
-                          const color = s >= 4 ? 'text-emerald-600' : s >= 3 ? 'text-brand-600' : s >= 2 ? 'text-amber-600' : 'text-ink-tertiary'
-                          return (
-                            <div key={k} className="text-center">
-                              <p className={`text-sm font-semibold ${color}`}>{s > 0 ? s.toFixed(1) : '—'}</p>
-                              <p className="text-[10px] text-ink-tertiary">{SKILL_LABELS[j]}</p>
-                            </div>
-                          )
-                        })}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h3 className="text-base font-semibold">{student.fullName}</h3>
+                        <Badge>Tháng {student.currentMonth}/12</Badge>
+                        <Badge variant="secondary">Tuần {student.currentWeek}</Badge>
                       </div>
-                    )}
-                    {!rubric && (
-                      <p className="text-xs text-ink-placeholder">Chưa có dữ liệu rubric · Điền sau bài kiểm tra tháng đầu</p>
-                    )}
-                  </div>
+                      <p className="text-sm text-muted-foreground mb-3 truncate">
+                        {student.occupation} · {student.user.email}
+                      </p>
 
-                  {/* Right */}
-                  <div className="text-right shrink-0">
-                    {avgScore ? (
-                      <div className="mb-2">
-                        <p className="text-xl font-display font-bold text-ink">{avgScore.toFixed(1)}</p>
-                        <p className="text-[10px] text-ink-tertiary">điểm TB / 5</p>
-                      </div>
-                    ) : null}
-                    <ArrowRight className="w-4 h-4 text-ink-placeholder ml-auto" />
-                  </div>
-                </div>
-              </Link>
+                      {rubric ? (
+                        <div className="flex flex-wrap items-center gap-4">
+                          {SKILL_KEYS.map((k, j) => {
+                            const s = rubric[k] ?? 0
+                            const color =
+                              s >= 4 ? 'text-emerald-500'
+                              : s >= 3 ? 'text-primary'
+                              : s >= 2 ? 'text-amber-500'
+                              : 'text-muted-foreground'
+                            return (
+                              <div key={k} className="text-center">
+                                <p className={cn('text-sm font-semibold tabular-nums', color)}>
+                                  {s > 0 ? s.toFixed(1) : '—'}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">{SKILL_LABELS[j]}</p>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground/70">
+                          Chưa có dữ liệu rubric · Điền sau bài kiểm tra tháng đầu
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      {avgScore != null && (
+                        <div className="mb-2">
+                          <p className="text-xl font-bold tabular-nums">{avgScore.toFixed(1)}</p>
+                          <p className="text-[10px] text-muted-foreground">điểm TB / 5</p>
+                        </div>
+                      )}
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 ml-auto group-hover:text-primary transition-colors" />
+                    </div>
+                  </Link>
+                </CardContent>
+              </Card>
             )
           })}
         </div>
