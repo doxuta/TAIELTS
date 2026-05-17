@@ -115,11 +115,26 @@ export default function LoginPage() {
                 <>Đăng nhập <ArrowRight className="w-4 h-4" /></>
               )}
             </button>
+
+            <div className="flex items-center justify-between text-xs pt-1">
+              <Link
+                href="/register"
+                className="text-brand-400 hover:text-brand-300 font-medium"
+              >
+                Tạo tài khoản mới
+              </Link>
+              <Link
+                href="/forgot-password"
+                className="text-white/40 hover:text-white/70 font-medium"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
           </form>
         </div>
 
         <p className="text-center text-xs text-white/20 mt-6">
-          Hệ thống nội bộ • Chỉ dành cho giáo viên và học viên được mời
+          Giáo viên / admin liên hệ TA để được cấp tài khoản.
         </p>
       </motion.div>
     </div>

@@ -33,6 +33,7 @@ export const config = {
   matcher: [
     '/teacher/:path*',
     '/student/:path*',
+    '/onboarding/:path*',
     '/dashboard',
     '/admin/:path*',
     '/builder/:path*',
