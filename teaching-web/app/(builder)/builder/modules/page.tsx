@@ -1,8 +1,18 @@
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Layers } from 'lucide-react'
 import { db } from '@/lib/db'
 import { MODULE_STATUSES, moduleStatusLabel } from '@/lib/modules'
 import { ModuleStatusBadge } from '@/components/modules/StatusBadge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,80 +42,91 @@ export default async function BuilderModulesPage({ searchParams }: PageProps) {
   })
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div className="px-4 py-6 md:px-8 md:py-8 max-w-5xl mx-auto space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink-primary">Modules</h1>
-          <p className="text-sm text-ink-tertiary">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Layers className="w-6 h-6 text-primary" /> Modules
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Học liệu được đóng gói thành module. Mỗi module có nhiều block và có thể gắn citation.
           </p>
         </div>
-        <Link
-          href="/builder/modules/new"
-          className="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700"
-        >
-          <Plus className="h-4 w-4" />
-          New module
-        </Link>
+        <Button asChild>
+          <Link href="/builder/modules/new">
+            <Plus className="w-4 h-4 mr-1" /> New module
+          </Link>
+        </Button>
       </header>
 
-      <form className="flex flex-wrap gap-2 mb-4">
-        <input
-          name="q"
-          defaultValue={searchParams.q ?? ''}
-          placeholder="Search title hoặc slug..."
-          className="flex-1 min-w-[200px] rounded-md border border-surface-border bg-surface-primary px-3 py-2 text-sm"
-        />
-        <select
-          name="status"
-          defaultValue={searchParams.status ?? ''}
-          className="rounded-md border border-surface-border bg-surface-primary px-3 py-2 text-sm"
-        >
-          <option value="">All statuses</option>
-          {MODULE_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {moduleStatusLabel(s)}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="rounded-md border border-surface-border bg-surface-primary px-3 py-2 text-sm font-medium hover:bg-surface-tertiary"
-        >
-          Filter
-        </button>
-      </form>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Filter</CardTitle>
+          <CardDescription>Tìm theo title/slug; lọc theo status.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="flex flex-wrap gap-2">
+            <Input
+              name="q"
+              defaultValue={searchParams.q ?? ''}
+              placeholder="Search title hoặc slug..."
+              className="flex-1 min-w-[200px]"
+            />
+            <select
+              name="status"
+              defaultValue={searchParams.status ?? ''}
+              className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">All statuses</option>
+              {MODULE_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {moduleStatusLabel(s)}
+                </option>
+              ))}
+            </select>
+            <Button type="submit" variant="secondary">Filter</Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {modules.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-surface-border bg-surface-primary p-10 text-center">
-          <p className="text-ink-secondary">Chưa có module nào.</p>
-        </div>
+        <Card>
+          <CardContent className="py-16 text-center">
+            <Layers className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">Chưa có module nào.</p>
+            <Button asChild size="sm" className="mt-3">
+              <Link href="/builder/modules/new">
+                <Plus className="w-4 h-4 mr-1" /> Tạo module đầu tiên
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <ul className="space-y-2">
           {modules.map((m) => (
             <li key={m.id}>
               <Link
                 href={`/builder/modules/${m.id}`}
-                className="block rounded-xl border border-surface-border bg-surface-primary p-3 hover:border-brand-300"
+                className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-accent/50"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold text-ink-primary">{m.title}</h3>
+                  <h3 className="font-semibold">{m.title}</h3>
                   <ModuleStatusBadge status={m.status} />
                   {m.skill && (
-                    <span className="rounded-full bg-surface-tertiary px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-secondary">
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
                       {m.skill}
-                    </span>
+                    </Badge>
                   )}
                   {m.cefrLevel && (
-                    <span className="rounded-full bg-surface-tertiary px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-secondary">
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
                       {m.cefrLevel}
-                    </span>
+                    </Badge>
                   )}
                 </div>
                 {m.summary && (
-                  <p className="mt-1 text-sm text-ink-secondary line-clamp-2">{m.summary}</p>
+                  <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{m.summary}</p>
                 )}
-                <div className="mt-1 text-xs text-ink-tertiary">
+                <div className="mt-1 text-xs text-muted-foreground">
                   {m._count.blocks} block{m._count.blocks === 1 ? '' : 's'} · v{m.version} ·
                   cập nhật {new Date(m.updatedAt).toLocaleDateString('vi-VN')}
                 </div>

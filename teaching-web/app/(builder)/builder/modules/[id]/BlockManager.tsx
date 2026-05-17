@@ -2,10 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, ChevronRight, Plus, Save, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Save, Trash2, Loader2, AlertTriangle } from 'lucide-react'
 import { BLOCK_TYPES_V1, blockTypeLabel, parseBlockContent } from '@/lib/modules'
 import { CitationList, type CitationWithSource } from '@/components/sources/CitationList'
 import { CitationAttacher } from '@/components/sources/CitationAttacher'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 
 type Block = {
   id: string
@@ -24,8 +35,8 @@ interface Props {
   moduleStatus: string
 }
 
-const INPUT =
-  'w-full rounded-lg border border-surface-border bg-surface-primary px-3 py-2 text-sm text-ink-primary focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200'
+const NATIVE_SELECT =
+  'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
 
 const readOnly = (moduleStatus: string, role: string) =>
   moduleStatus === 'PUBLISHED' && role !== 'ADMIN'
@@ -78,139 +89,133 @@ export function BlockManager({
   }
 
   return (
-    <section className="rounded-xl border border-surface-border bg-surface-primary p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-ink-primary">Blocks ({blocks.length})</h2>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-base">Blocks ({blocks.length})</CardTitle>
         {!locked && !adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
-          >
-            <Plus className="h-3 w-3" /> Add block
-          </button>
+          <Button size="sm" onClick={() => setAdding(true)}>
+            <Plus className="w-3 h-3 mr-1" /> Add block
+          </Button>
         )}
-      </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {locked && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-800 dark:text-amber-300">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <p>Module đang PUBLISHED — chỉ ADMIN mới chỉnh sửa được. Bạn có thể xem nhưng không edit.</p>
+          </div>
+        )}
 
-      {locked && (
-        <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700 border border-amber-200">
-          Module đang PUBLISHED — chỉ ADMIN mới chỉnh sửa được. Bạn có thể xem nhưng không edit.
-        </p>
-      )}
+        {adding && (
+          <div className="rounded-md border border-dashed bg-muted/30 p-4 space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Block type</Label>
+                <select
+                  value={addType}
+                  onChange={(e) => setAddType(e.target.value)}
+                  className={NATIVE_SELECT}
+                >
+                  {BLOCK_TYPES_V1.map((t) => (
+                    <option key={t} value={t}>{blockTypeLabel(t)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Title</Label>
+                <Input
+                  value={addTitle}
+                  onChange={(e) => setAddTitle(e.target.value)}
+                  placeholder={
+                    addType === 'GRAMMAR_NOTE'
+                      ? 'Present perfect — form & use'
+                      : 'Short reading: A new habit'
+                  }
+                />
+              </div>
+            </div>
 
-      {adding && (
-        <div className="rounded-lg border border-dashed border-surface-border bg-surface-secondary p-3 space-y-2">
-          <div className="grid gap-2 md:grid-cols-2">
-            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-              Block type
-              <select
-                value={addType}
-                onChange={(e) => setAddType(e.target.value)}
-                className={INPUT}
-              >
-                {BLOCK_TYPES_V1.map((t) => (
-                  <option key={t} value={t}>
-                    {blockTypeLabel(t)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-              Title
-              <input
-                value={addTitle}
-                onChange={(e) => setAddTitle(e.target.value)}
-                className={INPUT}
+            {addType === 'WRITING_PROMPT' && (
+              <div className="space-y-1.5">
+                <Label>Writing task</Label>
+                <select
+                  value={addWritingTask}
+                  onChange={(e) => setAddWritingTask(e.target.value as 'TASK_1' | 'TASK_2')}
+                  className={NATIVE_SELECT}
+                >
+                  <option value="TASK_2">TASK 2 (essay)</option>
+                  <option value="TASK_1">TASK 1 (academic / general)</option>
+                </select>
+              </div>
+            )}
+
+            {addType === 'SPEAKING_PROMPT' && (
+              <div className="space-y-1.5">
+                <Label>Speaking part</Label>
+                <select
+                  value={addSpeakingPart}
+                  onChange={(e) => setAddSpeakingPart(Number(e.target.value) as 1 | 2 | 3)}
+                  className={NATIVE_SELECT}
+                >
+                  <option value={1}>Part 1 — Interview</option>
+                  <option value={2}>Part 2 — Long turn (cue card)</option>
+                  <option value={3}>Part 3 — Discussion</option>
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label>
+                {addType === 'WRITING_PROMPT' || addType === 'SPEAKING_PROMPT'
+                  ? 'Prompt'
+                  : 'Body (markdown ok)'}
+              </Label>
+              <Textarea
+                value={addBody}
+                onChange={(e) => setAddBody(e.target.value)}
+                rows={5}
                 placeholder={
-                  addType === 'GRAMMAR_NOTE'
-                    ? 'Present perfect — form & use'
-                    : 'Short reading: A new habit'
+                  addType === 'WRITING_PROMPT'
+                    ? 'Some people think... Discuss both views and give your opinion.'
+                    : addType === 'SPEAKING_PROMPT'
+                      ? 'Describe a place you visited recently. You should say...'
+                      : 'Viết nội dung block...'
                 }
               />
-            </label>
-          </div>
-          {addType === 'WRITING_PROMPT' && (
-            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-              Writing task
-              <select
-                value={addWritingTask}
-                onChange={(e) => setAddWritingTask(e.target.value as 'TASK_1' | 'TASK_2')}
-                className={INPUT}
-              >
-                <option value="TASK_2">TASK 2 (essay)</option>
-                <option value="TASK_1">TASK 1 (academic / general)</option>
-              </select>
-            </label>
-          )}
-          {addType === 'SPEAKING_PROMPT' && (
-            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-              Speaking part
-              <select
-                value={addSpeakingPart}
-                onChange={(e) => setAddSpeakingPart(Number(e.target.value) as 1 | 2 | 3)}
-                className={INPUT}
-              >
-                <option value={1}>Part 1 — Interview</option>
-                <option value={2}>Part 2 — Long turn (cue card)</option>
-                <option value={3}>Part 3 — Discussion</option>
-              </select>
-            </label>
-          )}
-          <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-            {addType === 'WRITING_PROMPT' || addType === 'SPEAKING_PROMPT' ? 'Prompt' : 'Body (markdown ok)'}
-            <textarea
-              value={addBody}
-              onChange={(e) => setAddBody(e.target.value)}
-              rows={5}
-              className={INPUT}
-              placeholder={
-                addType === 'WRITING_PROMPT'
-                  ? 'Some people think... Discuss both views and give your opinion.'
-                  : addType === 'SPEAKING_PROMPT'
-                    ? 'Describe a place you visited recently. You should say...'
-                    : 'Viết nội dung block...'
-              }
-            />
-          </label>
-          {addError && <p className="text-xs text-red-600">{addError}</p>}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={addBlock}
-              disabled={pending}
-              className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-            >
-              {pending ? 'Saving...' : 'Save block'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setAdding(false)}
-              className="rounded-md border border-surface-border bg-surface-primary px-3 py-1.5 text-xs text-ink-secondary hover:bg-surface-tertiary"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+            </div>
 
-      {blocks.length === 0 ? (
-        <p className="text-sm text-ink-tertiary">Chưa có block nào.</p>
-      ) : (
-        <ul className="space-y-2">
-          {blocks.map((b) => (
-            <li key={b.id}>
-              <BlockRow
-                moduleId={moduleId}
-                block={b}
-                citations={citationsByBlock[b.id] ?? []}
-                viewerRole={viewerRole}
-                locked={locked}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+            {addError && <p className="text-xs text-destructive">{addError}</p>}
+            <div className="flex gap-2">
+              <Button size="sm" onClick={addBlock} disabled={pending}>
+                {pending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
+                {pending ? 'Saving...' : 'Save block'}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {blocks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Chưa có block nào.</p>
+        ) : (
+          <ul className="space-y-2">
+            {blocks.map((b) => (
+              <li key={b.id}>
+                <BlockRow
+                  moduleId={moduleId}
+                  block={b}
+                  citations={citationsByBlock[b.id] ?? []}
+                  viewerRole={viewerRole}
+                  locked={locked}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -264,40 +269,43 @@ function BlockRow({
   }
 
   return (
-    <div className="rounded-lg border border-surface-border bg-surface-secondary p-3">
+    <div className="rounded-md border bg-muted/30 p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
           onClick={() => setOpen(!open)}
-          className="rounded-md p-1 text-ink-tertiary hover:bg-surface-tertiary"
           aria-label={open ? 'Collapse' : 'Expand'}
         >
-          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </button>
-        <span className="rounded-full bg-surface-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-secondary border border-surface-border">
+          {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </Button>
+        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
           {blockTypeLabel(block.type)}
-        </span>
-        <h3 className="font-medium text-ink-primary">{block.title}</h3>
-        <span className="ml-auto text-xs text-ink-tertiary">order {block.order}</span>
+        </Badge>
+        <h3 className="font-medium">{block.title}</h3>
+        <span className="ml-auto text-xs text-muted-foreground">order {block.order}</span>
         {!locked && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
             onClick={() => setEditing(!editing)}
-            className="text-xs text-ink-tertiary hover:text-ink-primary"
           >
             {editing ? 'Cancel' : 'Edit'}
-          </button>
+          </Button>
         )}
         {!locked && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
             onClick={remove}
             disabled={pending}
-            className="text-ink-tertiary hover:text-red-600 disabled:opacity-50"
             aria-label="Delete"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
         )}
       </div>
 
@@ -305,38 +313,25 @@ function BlockRow({
         <div className="mt-3 space-y-3">
           {editing ? (
             <div className="space-y-2">
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className={INPUT}
-              />
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={6}
-                className={INPUT}
-              />
-              {error && <p className="text-xs text-red-600">{error}</p>}
-              <button
-                type="button"
-                onClick={save}
-                disabled={pending}
-                className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-              >
-                <Save className="h-3 w-3" /> Save
-              </button>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={6} />
+              {error && <p className="text-xs text-destructive">{error}</p>}
+              <Button size="sm" onClick={save} disabled={pending}>
+                {pending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Save className="w-3 h-3 mr-1" />}
+                Save
+              </Button>
             </div>
           ) : (
-            <div className="rounded-md bg-surface-primary p-3 text-sm text-ink-primary whitespace-pre-wrap">
+            <div className="rounded-md bg-card p-3 text-sm whitespace-pre-wrap">
               {parseBlockContent(block.contentJson).body ?? (
-                <span className="text-ink-tertiary">Trống.</span>
+                <span className="text-muted-foreground">Trống.</span>
               )}
             </div>
           )}
 
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Citations
               </h4>
               {!locked && (

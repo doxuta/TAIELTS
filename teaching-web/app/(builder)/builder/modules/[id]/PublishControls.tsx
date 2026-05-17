@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { Send, CheckCircle, Archive, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   moduleId: string
@@ -14,10 +16,13 @@ export function PublishControls({ moduleId, status, viewerRole, blockCount }: Pr
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [action, setAction] = useState<string | null>(null)
 
-  async function call(path: string) {
+  async function call(path: string, verb: string) {
     setError(null)
+    setAction(verb)
     const res = await fetch(`/api/modules/${moduleId}/${path}`, { method: 'POST' })
+    setAction(null)
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
       setError(data?.error ?? 'Action failed')
@@ -36,36 +41,40 @@ export function PublishControls({ moduleId, status, viewerRole, blockCount }: Pr
   return (
     <div className="flex flex-wrap items-center gap-2">
       {canSubmit && (
-        <button
-          type="button"
-          onClick={() => call('submit-review')}
+        <Button
+          size="sm"
+          variant="default"
+          onClick={() => call('submit-review', 'submit')}
           disabled={pending}
-          className="rounded-md bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+          className="bg-amber-500 hover:bg-amber-600"
         >
+          {action === 'submit' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
           Submit for review
-        </button>
+        </Button>
       )}
       {canPublish && (
-        <button
-          type="button"
-          onClick={() => call('publish')}
+        <Button
+          size="sm"
+          onClick={() => call('publish', 'publish')}
           disabled={pending}
-          className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="bg-emerald-600 hover:bg-emerald-700"
         >
+          {action === 'publish' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <CheckCircle className="w-3 h-3 mr-1" />}
           {status === 'PUBLISHED' ? 'Republish (v+1)' : 'Publish'}
-        </button>
+        </Button>
       )}
       {canArchive && (
-        <button
-          type="button"
-          onClick={() => call('archive')}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => call('archive', 'archive')}
           disabled={pending}
-          className="rounded-md border border-surface-border bg-surface-primary px-3 py-1.5 text-xs font-semibold text-ink-secondary hover:bg-surface-tertiary disabled:opacity-50"
         >
+          {action === 'archive' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Archive className="w-3 h-3 mr-1" />}
           Archive
-        </button>
+        </Button>
       )}
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-destructive">{error}</span>}
     </div>
   )
 }
