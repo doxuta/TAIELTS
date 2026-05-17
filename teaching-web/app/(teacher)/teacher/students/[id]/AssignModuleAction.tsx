@@ -2,7 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { Plus, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 type ModuleOption = {
   id: string
@@ -16,8 +19,8 @@ interface Props {
   modules: ModuleOption[]
 }
 
-const INPUT =
-  'w-full rounded-lg border border-surface-border bg-surface-primary px-3 py-2 text-sm text-ink-primary focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200'
+const NATIVE_SELECT =
+  'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
 
 export function AssignModuleAction({ studentId, modules }: Props) {
   const router = useRouter()
@@ -59,38 +62,37 @@ export function AssignModuleAction({ studentId, modules }: Props) {
 
   if (!open) {
     return (
-      <button
-        type="button"
+      <Button
+        size="sm"
         onClick={() => setOpen(true)}
         disabled={modules.length === 0}
-        className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
       >
-        <Plus className="h-3 w-3" /> Assign module
-      </button>
+        <Plus className="w-3 h-3 mr-1" /> Assign module
+      </Button>
     )
   }
 
   return (
-    <div className="w-full rounded-lg border border-dashed border-surface-border bg-surface-secondary p-3 space-y-2">
+    <div className="w-full rounded-md border border-dashed bg-muted/30 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-ink-primary">Assign module</h3>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="text-xs text-ink-tertiary hover:text-ink-primary"
-        >
+        <h3 className="text-sm font-semibold">Assign module</h3>
+        <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="h-7 px-2 text-xs">
           Cancel
-        </button>
+        </Button>
       </div>
       {modules.length === 0 ? (
-        <p className="text-xs text-ink-tertiary">
+        <p className="text-xs text-muted-foreground">
           Không có module published khả dụng. Vào /builder/modules để publish trước.
         </p>
       ) : (
         <>
-          <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-            Module
-            <select value={moduleId} onChange={(e) => setModuleId(e.target.value)} className={INPUT}>
+          <div className="space-y-1.5">
+            <Label>Module</Label>
+            <select
+              value={moduleId}
+              onChange={(e) => setModuleId(e.target.value)}
+              className={NATIVE_SELECT}
+            >
               <option value="">— chọn module —</option>
               {modules.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -100,36 +102,22 @@ export function AssignModuleAction({ studentId, modules }: Props) {
                 </option>
               ))}
             </select>
-          </label>
-          <div className="grid gap-2 md:grid-cols-2">
-            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-              Hạn (optional)
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className={INPUT}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-medium text-ink-secondary">
-              Ghi chú cho học viên
-              <input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                className={INPUT}
-                placeholder="Optional"
-              />
-            </label>
           </div>
-          {error && <p className="text-xs text-red-600">{error}</p>}
-          <button
-            type="button"
-            onClick={submit}
-            disabled={pending}
-            className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-          >
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Hạn (optional)</Label>
+              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Ghi chú cho học viên</Label>
+              <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
+            </div>
+          </div>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <Button size="sm" onClick={submit} disabled={pending}>
+            {pending && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
             {pending ? 'Saving...' : 'Assign'}
-          </button>
+          </Button>
         </>
       )}
     </div>

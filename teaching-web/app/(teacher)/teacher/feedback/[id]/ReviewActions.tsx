@@ -2,8 +2,21 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { Save } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 
 const STATUSES = ['PENDING_REVIEW', 'APPROVED', 'NEEDS_REWORK', 'OVERRIDDEN'] as const
+
+const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'outline'> = {
+  PENDING_REVIEW: 'warning',
+  APPROVED: 'success',
+  NEEDS_REWORK: 'destructive',
+  OVERRIDDEN: 'outline',
+}
 
 interface Props {
   feedbackId: string
@@ -48,43 +61,46 @@ export function ReviewActions({ feedbackId, currentStatus, currentNotes }: Props
   }
 
   return (
-    <section className="rounded-xl border border-surface-border bg-surface-primary p-4 space-y-3">
-      <h2 className="font-semibold text-ink-primary">Teacher review</h2>
-      <textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        rows={3}
-        className="w-full rounded-md border border-surface-border bg-surface-primary px-3 py-2 text-sm"
-        placeholder="Ghi chú override / điều chỉnh dành cho học viên..."
-      />
-      <button
-        type="button"
-        onClick={saveNotes}
-        disabled={pending}
-        className="rounded-md border border-surface-border bg-surface-secondary px-3 py-1.5 text-xs font-medium hover:bg-surface-tertiary disabled:opacity-50"
-      >
-        Save notes
-      </button>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Teacher review</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          placeholder="Ghi chú override / điều chỉnh dành cho học viên..."
+        />
+        <Button size="sm" variant="secondary" onClick={saveNotes} disabled={pending}>
+          <Save className="w-3 h-3 mr-1" /> Save notes
+        </Button>
 
-      <div className="border-t border-surface-border pt-3">
-        <p className="text-xs text-ink-tertiary mb-2">
-          Trạng thái hiện tại: <span className="font-semibold">{currentStatus}</span>
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              disabled={pending || s === currentStatus}
-              onClick={() => setStatus(s)}
-              className="rounded-md border border-surface-border bg-surface-primary px-3 py-1.5 text-xs font-semibold hover:bg-surface-tertiary disabled:opacity-50"
-            >
-              {s.replaceAll('_', ' ')}
-            </button>
-          ))}
+        <Separator />
+
+        <div>
+          <p className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
+            Trạng thái hiện tại:
+            <Badge variant={STATUS_VARIANT[currentStatus] ?? 'secondary'}>
+              {currentStatus.replaceAll('_', ' ')}
+            </Badge>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {STATUSES.map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant={s === currentStatus ? 'default' : 'outline'}
+                disabled={pending || s === currentStatus}
+                onClick={() => setStatus(s)}
+              >
+                {s.replaceAll('_', ' ')}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
-    </section>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </CardContent>
+    </Card>
   )
 }
